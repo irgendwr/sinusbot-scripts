@@ -252,7 +252,7 @@ registerPlugin({
     }
 
     /**
-     * Shortens
+     * Shortens a string to a specified length
      * @param {string} str String
      * @param {number} len Max. length of the string
      */
