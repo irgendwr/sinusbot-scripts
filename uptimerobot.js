@@ -11,7 +11,7 @@ registerPlugin({
     vars: [
         {
             name: 'info',
-            title: 'Placeholders: \n%name%, %uptime%, %url%, %port%, %type%, %status%, %id%, %created%, %ssl.brand%, %ssl.product%, %ssl.expires%',
+            title: 'Placeholders: \n%name%, %uptime%, %url%, %port%, %type%, %status%, %id%, %created%, %avg_response_time%, %last_response_time%, %ssl.brand%, %ssl.product%, %ssl.expires%',
             description: 'bar'
         }, {
             name: 'servers',
@@ -155,7 +155,10 @@ registerPlugin({
         var params = JSON.stringify({
             format:  'json',
             api_key: server.apikey,
-            all_time_uptime_ratio: 1
+            all_time_uptime_ratio: 1,
+            response_times: 1,
+            response_times_limit: 1,
+            response_times_average: 1
         })
 
         sinusbot.http({
@@ -245,6 +248,8 @@ registerPlugin({
         .replace(/%ssl\.product%/gi, data.ssl.product || '')
         .replace(/%ssl\.expires%/gi, data.ssl.expires ? new Date(data.ssl.expires * 1000).toLocaleString() : '')
         .replace(/%created%/gi, new Date(data.create_datetime * 1000).toLocaleString())
+        .replace(/%last_response_time%/gi, data.response_times && data.response_times.length == 1 ? data.response_times[0].value + 'ms' : '')
+        .replace(/%avg_response_time%/gi, data.average_response_time ? data.average_response_time + 'ms' : '')
 
         return str
     }
