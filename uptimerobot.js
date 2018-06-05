@@ -5,7 +5,7 @@
 
 registerPlugin({
     name: 'Uptimerobot - Server Status/Uptime Monitoring',
-    version: '2.0',
+    version: '2.1.0',
     description: 'Informs you about the status of a server configured on uptimerobot.com',
     author: 'Jonas Bögle <dev@sandstorm-projects.de>',
     vars: [
