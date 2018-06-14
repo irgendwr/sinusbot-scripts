@@ -6,7 +6,7 @@
 registerPlugin({
     name: 'Simple custom commands',
     version: '1.2.0',
-    description: 'A simple script that responds to custom commands.',
+    description: 'Create your own custom commands.',
     author: 'Jonas Bögle <dev@sandstorm-projects.de>',
     backends: ["ts3", "discord"],
     vars: [

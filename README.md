@@ -1,10 +1,37 @@
 # sinusbot scripts
 
-> This repository contains a few scripts that I wrote for the [sinusbot](https://sinusbot.com).
+This repository contains a few scripts that I wrote for the [sinusbot](https://sinusbot.com).
+
+## [Simple custom commands](custom_commands.js)
+
+This is a simple script that allows you to create your own commands with custom responses.
+
+See [forum thread](https://forum.sinusbot.com/resources/custom-commands.226/) for more information/discussion.
+
+### Config
+
+In the config the following placeholders can be used:
+
+- %username%
+- %uid%
+- %dbid%
+- %description%
+- %ping%
+- %total_connections%
+- %packetloss%
+- %bytes_sent%
+- %bytes_received%
+- %ip%
+- %first_join%
+- %os%
+- %version%
+- %clients_count%
+- %clients%
+- %channels_count%
 
 ## [Uptimerobot - Server Status/Uptime Monitoring](uptimerobot.js)
 
-> Informs you about the status of a server configured on [uptimerobot.com](https://uptimerobot.com)
+Informs you about the status of a server configured on [uptimerobot.com](https://uptimerobot.com)
 
 See [forum thread](https://forum.sinusbot.com/resources/uptimerobot.127/) for more information/discussion.
 
