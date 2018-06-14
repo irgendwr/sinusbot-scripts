@@ -8,6 +8,7 @@ registerPlugin({
     version: '1.2.0',
     description: 'A simple script that responds to custom commands.',
     author: 'Jonas Bögle <dev@sandstorm-projects.de>',
+    backends: ["ts3", "discord"],
     vars: [
         {
             name: 'cmdPrefix',
@@ -32,7 +33,7 @@ registerPlugin({
                 },
                 {
                     name: 'response',
-                    title: 'Response: (placeholders: %username%, %uid%, %dbid%, %description%, %ping%, %total_connections%, %packetloss%, %bytes_sent%, %bytes_received%, %ip%, %first_join%)',
+                    title: 'Response: (placeholders: %username%, %uid%, %dbid%, %description%, %ping%, %total_connections%, %packetloss%, %bytes_sent%, %bytes_received%, %ip%, %first_join%, %os%, %version%, %clients_count%, %clients%, %channels_count%)',
                     type: 'multiline'
                 }
             ]
@@ -103,12 +104,26 @@ registerPlugin({
     // log info on startup
     log.i('debug messages are ' + (log.debug ? 'en' : 'dis') + 'abled')
     log.i(info.name + ' v' + info.version + ' by ' + info.author + ' loaded successfully.')
+    log.d('backend: ' + engine.getBackend())
 
     event.on('chat', function (ev) {
+        log.d(ev)
+
         if (isBlacklisted(ev.client, config.sgBlacklist)) {
             log.d('ignoring command from ' + ev.client.name() + ' due to blacklist')
             return
         }
+
+        // FIXME: workaround for discord
+        if (ev.mode == 0) {
+            if (typeof ev.channel == 'undefined') {
+                ev.mode = 1
+            } else {
+                ev.mode = 2
+            }
+            log.d('[workaround] detected message type: ' + ev.mode)
+        }
+        // TODO: add option to only listen in a specified channel
 
         if (ev.mode == 1 && config.privateChatEnabled ||
             ev.mode == 2 && config.channelChatEnabled ||
@@ -124,6 +139,8 @@ registerPlugin({
                             lastUsage[ev.client.uid()] = timestamp()
                             return
                     }
+
+                    log.d('Received command "' + ev.text + '" from ' + ev.client.name())
 
                     var resp = replacePlaceholders(cmd.response, ev.client)
 
@@ -166,7 +183,9 @@ registerPlugin({
         .replace(/%os%/gi, client.getPlatform())
         .replace(/%version%/gi, client.getVersion())
         .replace(/%clients_count%/gi, clients.length.toString())
-        .replace(/%clients%/gi, clients.join(', '))
+        .replace(/%clients%/gi, clients.reduce(function (clstr, client) {
+            return clstr += (clstr ? ', ' : '') + client.name()
+        }, ''))
         .replace(/%channels_count%/gi, channels.length.toString())
 
         return str
@@ -180,6 +199,9 @@ registerPlugin({
      * @return {boolean}
      */
     function isBlacklisted(client, blacklist) {
+        if (!blacklist || blacklist.length == 0)
+            return false
+        
         return client.getServerGroups().some(function (servergroup) {
             return blacklist.some(function (blItem) {
                 return servergroup.id() == blItem.servergroup
@@ -202,6 +224,9 @@ registerPlugin({
     function Logger() {
         this.debug = false
         this.log = function (level, msg) {
+            if (typeof msg == 'object') {
+                msg = JSON.stringify(msg)
+            }
             engine.log('[' + level + '] ' + msg)
         }
         this.e = function (msg) {
