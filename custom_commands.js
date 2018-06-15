@@ -70,8 +70,18 @@ registerPlugin({
             type: 'number'
         },
         {
-            name: 'sgBlacklist',
-            title: 'Ignore users with these servergroups:',
+            name: 'blackOrWhite',
+            title: 'Blacklist or whitelist?',
+            type: 'select',
+            placeholder: 'Blacklist',
+            options: [
+                'Blacklist',
+                'Whitelist'
+            ]
+        },
+        {
+            name: 'sgList',
+            title: 'Black-/Whitelist users with these servergroups:',
             type: 'array',
             vars: [{
                 name: 'servergroup',
@@ -94,6 +104,7 @@ registerPlugin({
     config.privateChatEnabled = config.privateChatEnabled || false
     config.responseType = config.responseType || 0
     config.cooldown = config.cooldown || 0
+    config.blackOrWhite = config.blackOrWhite || 0
     engine.saveConfig(config)
     
     var prefix = ['!', '.', ''][config.cmdPrefix]
@@ -109,7 +120,7 @@ registerPlugin({
     event.on('chat', function (ev) {
         log.d(ev)
 
-        if (isBlacklisted(ev.client, config.sgBlacklist)) {
+        if (isBlacklisted(ev.client)) {
             log.d('ignoring command from ' + ev.client.name() + ' due to blacklist')
             return
         }
@@ -192,19 +203,23 @@ registerPlugin({
     }
 
     /**
-     * Checks if a client has a servergroup that is blacklisted
+     * Checks if a client is blacklisted
      * 
      * @param {Client} client
-     * @param {Array} blacklist blacklist config array
      * @return {boolean}
      */
-    function isBlacklisted(client, blacklist) {
-        if (!blacklist || blacklist.length == 0)
-            return false
-        
-        return client.getServerGroups().some(function (servergroup) {
-            return blacklist.some(function (blItem) {
-                return servergroup.id() == blItem.servergroup
+    function isBlacklisted(client) {
+        var isBlacklist = (config.blackOrWhite == 0)
+
+        if (!config.sgList || config.sgList.length == 0) {
+            // returns false if (blacklist and empty) or true if (whitelist and empty)
+            return !isBlacklist
+        }
+
+        // returns true if (blacklist and included) or (whitelist and not included)
+        return isBlacklist == client.getServerGroups().some(function (servergroup) {
+            return config.sgList.some(function (item) {
+                return servergroup.id() == item.servergroup
             })
         })
     }
