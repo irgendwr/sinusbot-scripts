@@ -223,12 +223,6 @@ registerPlugin({
     config.notifyType = config.notifyType || 0
     engine.saveConfig(config)
 
-    // check whether afk channel is set
-    if (!config.afkChannel) {
-        log.e('You need to specify an afk channel in the config.')
-        return
-    }
-
     var log = new Logger()
     log.debug = false
     var idleThreshold = config.idleThreshold * 60 * 1000
@@ -236,6 +230,13 @@ registerPlugin({
     var afk = []
     var queue = []
     var lastMoveEvent = {}
+
+    // check whether afk channel is set
+    if (!config.afkChannel) {
+        engine.notify('You need to specify an afk channel in the config.')
+        log.e('You need to specify an afk channel in the config.')
+        return
+    }
 
     // log info on startup
     log.i('debug messages are ' + (log.debug ? 'en' : 'dis') + 'abled')
