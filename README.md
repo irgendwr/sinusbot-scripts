@@ -29,6 +29,13 @@ In the config the following placeholders can be used:
 - %clients%
 - %channels_count%
 
+## [AFK mover (Away/Mute/Deaf/Idle)](away_mover.js)
+
+This script moves clients that are set as away, have their speakers/mic muted or are idle to a specified channel.
+
+See [forum thread](https://forum.sinusbot.com/resources/away-mover.179/) for more information/discussion.
+
+
 ## [Uptimerobot - Server Status/Uptime Monitoring](uptimerobot.js)
 
 Informs you about the status of a server configured on [uptimerobot.com](https://uptimerobot.com)
