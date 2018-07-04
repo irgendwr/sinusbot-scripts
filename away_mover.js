@@ -27,10 +27,7 @@ registerPlugin({
             title: 'Move users back',
             type: 'checkbox',
             indent: 3,
-            conditions: [{
-                field: 'awayEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'awayEnabled', value: true }]
         },
         {
             name: 'awaySgBlacklist',
@@ -42,10 +39,7 @@ registerPlugin({
                 type: 'number'
             }],
             indent: 3,
-            conditions: [{
-                field: 'awayEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'awayEnabled', value: true }]
         },
         {
             name: 'awayChBlacklist',
@@ -57,20 +51,14 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{
-                field: 'awayEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'awayEnabled', value: true }]
         },
         {
             name: 'awayDelay',
             title: 'Delay (in seconds)',
             type: 'number',
             indent: 3,
-            conditions: [{
-                field: 'awayEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'awayEnabled', value: true }]
         },
 
         /*** mute ***/
@@ -84,10 +72,7 @@ registerPlugin({
             title: 'Move users back',
             type: 'checkbox',
             indent: 3,
-            conditions: [{
-                field: 'muteEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'muteEnabled', value: true }]
         },
         {
             name: 'muteSgBlacklist',
@@ -99,10 +84,7 @@ registerPlugin({
                 type: 'number'
             }],
             indent: 3,
-            conditions: [{
-                field: 'muteEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'muteEnabled', value: true }]
         },
         {
             name: 'muteChBlacklist',
@@ -114,20 +96,14 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{
-                field: 'muteEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'muteEnabled', value: true }]
         },
         {
             name: 'muteDelay',
             title: 'Delay (in seconds)',
             type: 'number',
             indent: 3,
-            conditions: [{
-                field: 'muteEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'muteEnabled', value: true }]
         },
 
         /*** deaf ***/
@@ -141,10 +117,7 @@ registerPlugin({
             title: 'Move users back',
             type: 'checkbox',
             indent: 3,
-            conditions: [{
-                field: 'deafEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'deafEnabled', value: true }]
         },
         {
             name: 'deafSgBlacklist',
@@ -156,10 +129,7 @@ registerPlugin({
                 type: 'number'
             }],
             indent: 3,
-            conditions: [{
-                field: 'deafEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'deafEnabled', value: true }]
         },
         {
             name: 'deafChBlacklist',
@@ -171,20 +141,14 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{
-                field: 'deafEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'deafEnabled', value: true }]
         },
         {
             name: 'deafDelay',
             title: 'Delay (in seconds)',
             type: 'number',
             indent: 3,
-            conditions: [{
-                field: 'deafEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'deafEnabled', value: true }]
         },
 
         /*** idle ***/
@@ -198,10 +162,7 @@ registerPlugin({
             title: 'Move users back',
             type: 'checkbox',
             indent: 3,
-            conditions: [{
-                field: 'idleEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'idleEnabled', value: true }]
         },*/
         {
             name: 'idleSgBlacklist',
@@ -213,10 +174,7 @@ registerPlugin({
                 type: 'number'
             }],
             indent: 3,
-            conditions: [{
-                field: 'idleEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'idleEnabled', value: true }]
         },
         {
             name: 'idleChBlacklist',
@@ -228,20 +186,14 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{
-                field: 'idleEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'idleEnabled', value: true }]
         },
         {
             name: 'idleThreshold',
             title: 'How long are people allowed to be idle? (in minutes, don\'t use small values!)',
             type: 'number',
             indent: 3,
-            conditions: [{
-                field: 'idleEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'idleEnabled', value: true }]
         },
 
         /*** general - notify ***/
@@ -259,21 +211,18 @@ registerPlugin({
                 'poke'
             ],
             indent: 3,
-            conditions: [{
-                field: 'notifyEnabled',
-                value: true
-            }]
+            conditions: [{ field: 'notifyEnabled', value: true }]
         },
     ]
 }, function (sinusbot, config, info) {
-
-    // set to true for more output
-    var DEBUG = false;
 
     // include modules
     var event = require('event');
     var engine = require('engine');
     var backend = require('backend');
+
+    // set to true for more output
+    var DEBUG = false;
 
     // check if afk channel is not set
     if (config.afkChannel == null) {
@@ -416,7 +365,7 @@ registerPlugin({
         event.on('clientDeaf', function (client) {
             logmsg('D', 'clientDeaf: ' + client.nick());
 
-            if (!/hasBlacklistedGroup(client, config.deafSgBlacklist) || inBlacklistedChannel(client, config.deafChBlacklist))) {
+            if (!(hasBlacklistedGroup(client, config.deafSgBlacklist) || inBlacklistedChannel(client, config.deafChBlacklist))) {
                 logmsg('D', 'not blacklisted');
 
                 var AFKclientEntry = getFromAFK(client);
