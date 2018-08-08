@@ -238,6 +238,13 @@ registerPlugin({
         return
     }
 
+    // check whether afk channel is valid
+    if (!afkChannel) {
+        engine.notify('Unable to find asfk channel.')
+        log.e('Unable to find asfk channel.')
+        return
+    }
+
     // log info on startup
     log.i('debug messages are ' + (log.debug ? 'en' : 'dis') + 'abled')
     log.i(info.name + ' v' + info.version + ' by ' + info.author + ' loaded successfully.')

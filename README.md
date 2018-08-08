@@ -35,7 +35,6 @@ This script moves clients that are set as away, have their speakers/mic muted or
 
 See [forum thread](https://forum.sinusbot.com/resources/away-mover.179/) for more information/discussion.
 
-
 ## [Uptimerobot - Server Status/Uptime Monitoring](uptimerobot.js)
 
 Informs you about the status of a server configured on [uptimerobot.com](https://uptimerobot.com)
