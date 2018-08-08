@@ -240,8 +240,8 @@ registerPlugin({
 
     // check whether afk channel is valid
     if (!afkChannel) {
-        engine.notify('Unable to find asfk channel.')
-        log.e('Unable to find asfk channel.')
+        engine.notify('Unable to find afk channel.')
+        log.e('Unable to find afk channel.')
         return
     }
 
