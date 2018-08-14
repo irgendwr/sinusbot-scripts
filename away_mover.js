@@ -240,10 +240,26 @@ registerPlugin({
 
     // check whether afk channel is valid
     if (!afkChannel) {
-        engine.notify('Unable to find afk channel.')
-        log.e('Unable to find afk channel.')
-        return
+        log.w('Unable to find afk channel.')
     }
+
+    event.on('connect', function() {
+        var channel = backend.getChannelByID(config.afkChannel)
+        if (channel) {
+            afkChannel = channel
+        } else {
+            log.w('AFK Channel not found on connect.')
+        }
+    })
+
+    event.on('load', function() {
+        var channel = backend.getChannelByID(config.afkChannel)
+        if (channel) {
+            afkChannel = channel
+        } else {
+            log.w('AFK Channel not found on load.')
+        }
+    })
 
     // log info on startup
     log.i('debug messages are ' + (log.debug ? 'en' : 'dis') + 'abled')
