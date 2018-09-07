@@ -423,8 +423,8 @@ registerPlugin({
                     if (client.isAway()) {
                         var awayFor = timestamp() - queuedAFKclient.timestamp
 
-                        if (awayFor >= config.awayDelay) {
-                            log.d(client.nick() + ' reached delay (' + awayFor + '/' + config.awayDelay + ')')
+                        if (awayFor >= config.awayDelay * 1000) {
+                            log.d(client.nick() + ' reached delay (' + awayFor + '/' + config.awayDelay * 1000 + 'ms)')
                             moveToAFKchannel(client, 'away queue')
 
                             afk.push({
@@ -444,8 +444,8 @@ registerPlugin({
                     if (client.isMuted()) {
                         var mutedFor = timestamp() - queuedAFKclient.timestamp
 
-                        if (mutedFor >= config.muteDelay) {
-                            log.d(client.nick() + ' reached delay (' + mutedFor + '/' + config.muteDelay + ')')
+                        if (mutedFor >= config.muteDelay * 1000) {
+                            log.d(client.nick() + ' reached delay (' + mutedFor + '/' + config.muteDelay * 1000 + 'ms)')
                             moveToAFKchannel(client, 'mute queue')
 
                             afk.push({
@@ -465,8 +465,8 @@ registerPlugin({
                     if (client.isDeaf()) {
                         var deafFor = timestamp() - queuedAFKclient.timestamp
 
-                        if (deafFor >= config.deafDelay) {
-                            log.d(client.nick() + ' reached delay (' + deafFor + '/' + config.deafDelay + ')')
+                        if (deafFor >= config.deafDelay * 1000) {
+                            log.d(client.nick() + ' reached delay (' + deafFor + '/' + config.deafDelay * 1000 + 'ms)')
                             moveToAFKchannel(client, 'deaf queue')
 
                             afk.push({
@@ -529,7 +529,7 @@ registerPlugin({
                     var afkClient = getFromAFK(client)
                     if (afkClient) {
                         log.d('ignoring event since ' + client.nick() + ' is already afk (' +
-                            (timestamp() - afkClient.timestamp) + 's, ' + afkClient.event + ')')
+                        Math.round((timestamp() - afkClient.timestamp) / 1000) + 's, ' + afkClient.event + ')')
                         return
                     }
 
@@ -590,7 +590,7 @@ registerPlugin({
         })
 
         if (afkClient) {
-            log.d(client.nick() + 'was away for ' + (timestamp() - afkClient.timestamp) + 's')
+            log.d(client.nick() + 'was away for ' + Math.round((timestamp() - afkClient.timestamp) / 1000) + 's')
             log.d('moveBack: ' + moveBack)
 
             if (moveBack) {
