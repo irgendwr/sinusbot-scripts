@@ -42,8 +42,20 @@ registerPlugin({
             conditions: [{ field: 'awayEnabled', value: true }]
         },
         {
-            name: 'awayChBlacklist',
-            title: 'Ignore users within these channels:',
+            name: 'awayChannelIgnoreType',
+            title: 'Should this only apply to certain channels?',
+            type: 'select',
+            options: [
+                'No, check every channel.',
+                'Yes, whitelist the channels below.',
+                'Yes, blacklist the channels below.'
+            ],
+            indent: 3,
+            conditions: [{ field: 'awayEnabled', value: true }]
+        },
+        {
+            name: 'awayChannelList',
+            title: 'Channels:',
             type: 'array',
             vars: [{
                 name: 'channel',
@@ -51,7 +63,7 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{ field: 'awayEnabled', value: true }]
+            conditions: [{ field: 'awayEnabled', value: true }, { field: 'awayChannelIgnoreType', value: true }]
         },
         {
             name: 'awayDelay',
@@ -87,8 +99,20 @@ registerPlugin({
             conditions: [{ field: 'muteEnabled', value: true }]
         },
         {
-            name: 'muteChBlacklist',
-            title: 'Ignore users within these channels:',
+            name: 'muteChannelIgnoreType',
+            title: 'Should this only apply to certain channels?',
+            type: 'select',
+            options: [
+                'No, check every channel.',
+                'Yes, whitelist the channels below.',
+                'Yes, blacklist the channels below.'
+            ],
+            indent: 3,
+            conditions: [{ field: 'muteEnabled', value: true }]
+        },
+        {
+            name: 'muteChannelList',
+            title: 'Channels:',
             type: 'array',
             vars: [{
                 name: 'channel',
@@ -96,7 +120,7 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{ field: 'muteEnabled', value: true }]
+            conditions: [{ field: 'muteEnabled', value: true }, { field: 'muteChannelIgnoreType', value: true }]
         },
         {
             name: 'muteDelay',
@@ -132,8 +156,20 @@ registerPlugin({
             conditions: [{ field: 'deafEnabled', value: true }]
         },
         {
-            name: 'deafChBlacklist',
-            title: 'Ignore users within these channels:',
+            name: 'deafChannelIgnoreType',
+            title: 'Should this only apply to certain channels?',
+            type: 'select',
+            options: [
+                'No, check every channel.',
+                'Yes, whitelist the channels below.',
+                'Yes, blacklist the channels below.'
+            ],
+            indent: 3,
+            conditions: [{ field: 'deafEnabled', value: true }]
+        },
+        {
+            name: 'deafChannelList',
+            title: 'Channels:',
             type: 'array',
             vars: [{
                 name: 'channel',
@@ -141,7 +177,7 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{ field: 'deafEnabled', value: true }]
+            conditions: [{ field: 'deafEnabled', value: true }, { field: 'deafChannelIgnoreType', value: true }]
         },
         {
             name: 'deafDelay',
@@ -170,8 +206,20 @@ registerPlugin({
             conditions: [{ field: 'idleEnabled', value: true }]
         },
         {
-            name: 'idleChBlacklist',
-            title: 'Ignore users within these channels:',
+            name: 'idleChannelIgnoreType',
+            title: 'Should this only apply to certain channels?',
+            type: 'select',
+            options: [
+                'No, check every channel.',
+                'Yes, whitelist the channels below.',
+                'Yes, blacklist the channels below.'
+            ],
+            indent: 3,
+            conditions: [{ field: 'idleEnabled', value: true }]
+        },
+        {
+            name: 'idleChannelList',
+            title: 'Channels:',
             type: 'array',
             vars: [{
                 name: 'channel',
@@ -179,7 +227,7 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{ field: 'idleEnabled', value: true }]
+            conditions: [{ field: 'idleEnabled', value: true }, { field: 'idleChannelIgnoreType', value: true }]
         },
         {
             name: 'idleThreshold',
@@ -273,7 +321,7 @@ registerPlugin({
         event.on('clientAway', function (client) {
             log.d('clientAway: ' + client.nick())
 
-            if (!(hasBlacklistedGroup(client, config.awaySgBlacklist) || inBlacklistedChannel(client, config.awayChBlacklist))) {
+            if (!hasBlacklistedGroup(client, config.awaySgBlacklist) && channelIsIncluded(client, config.awayChannelIgnoreType, config.awayChannelList)) {
                 var afkClient = getFromAFK(client)
                 if (afkClient) {
                     log.d('ignoring event since ' + client.nick() + ' is already afk (' +
@@ -323,7 +371,7 @@ registerPlugin({
         event.on('clientMute', function (client) {
             log.d('clientMute: ' + client.nick())
 
-            if (!(hasBlacklistedGroup(client, config.muteSgBlacklist) || inBlacklistedChannel(client, config.muteChBlacklist))) {
+            if (!hasBlacklistedGroup(client, config.muteSgBlacklist) && channelIsIncluded(client, config.muteChannelIgnoreType, config.muteChannelList)) {
                 var afkClient = getFromAFK(client)
                 if (afkClient) {
                     log.d('ignoring event since ' + client.nick() + ' is already afk (' +
@@ -372,7 +420,7 @@ registerPlugin({
         event.on('clientDeaf', function (client) {
             log.d('clientDeaf: ' + client.nick())
 
-            if (!(hasBlacklistedGroup(client, config.deafSgBlacklist) || inBlacklistedChannel(client, config.deafChBlacklist))) {
+            if (!hasBlacklistedGroup(client, config.deafSgBlacklist) && channelIsIncluded(client, config.deafChannelIgnoreType, config.deafChannelList)) {
                 var afkClient = getFromAFK(client)
                 if (afkClient) {
                     log.d('ignoring event since ' + client.nick() + ' is already afk (' +
@@ -522,7 +570,7 @@ registerPlugin({
 
             if (client.getIdleTime() > idleThreshold && lastMoveEvent[client.uid()] < timestamp() - idleThreshold) {
 
-                if (!(hasBlacklistedGroup(client, config.idleSgBlacklist) || inBlacklistedChannel(client, config.idleChBlacklist))) {
+                if (!hasBlacklistedGroup(client, config.idleSgBlacklist) && channelIsIncluded(client, config.idleChannelIgnoreType, config.idleChannelList)) {
                     log.d('client idle: ' + client.nick())
                     log.d('not blacklisted')
 
@@ -656,19 +704,22 @@ registerPlugin({
     }
  
     /**
-     * Checks if a client is in a channel that is blacklisted
+     * Checks wheter the channel a client is in should be checked.
      *
      * @param {Client} client
-     * @param {Array} blacklist blacklist config array
+     * @param {Number} listType
+     * @param {Array} channelList
      * @return {boolean}
      */
-    function inBlacklistedChannel(client, blacklist) {
-        if (!blacklist)
-            return false
-        
-        return client.getChannels().some(function (channel) {
-            return blacklist.some(function (blacklistItem) {
-                return channel.id() == blacklistItem.channel
+    function channelIsIncluded(client, listType, channelList) {
+        if (!listType) {
+            return true
+        }
+
+        // returns true if (whitelist and included) or (not whitelist and not included)
+        return (listType == 1) == client.getChannels().some(function (channel) {
+            return channelList.some(function (item) {
+                return channel.id() == item.channel
             })
         })
     }
