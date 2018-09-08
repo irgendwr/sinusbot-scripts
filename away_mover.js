@@ -63,7 +63,7 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{ field: 'awayEnabled', value: true }, { field: 'awayChannelIgnoreType', value: true }]
+            conditions: [{ field: 'awayEnabled', value: true }]
         },
         {
             name: 'awayDelay',
@@ -120,7 +120,7 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{ field: 'muteEnabled', value: true }, { field: 'muteChannelIgnoreType', value: true }]
+            conditions: [{ field: 'muteEnabled', value: true }]
         },
         {
             name: 'muteDelay',
@@ -177,7 +177,7 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{ field: 'deafEnabled', value: true }, { field: 'deafChannelIgnoreType', value: true }]
+            conditions: [{ field: 'deafEnabled', value: true }]
         },
         {
             name: 'deafDelay',
@@ -227,7 +227,7 @@ registerPlugin({
                 type: 'channel'
             }],
             indent: 3,
-            conditions: [{ field: 'idleEnabled', value: true }, { field: 'idleChannelIgnoreType', value: true }]
+            conditions: [{ field: 'idleEnabled', value: true }]
         },
         {
             name: 'idleThreshold',
