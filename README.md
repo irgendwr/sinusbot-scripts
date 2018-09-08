@@ -58,3 +58,7 @@ In the config the following placeholders can be used:
 - %ssl.expires%
 
 ## [Group List](group_list.js)
+
+List the servers groups and their IDs with the `!groups` command.
+
+See [forum thread](https://forum.sinusbot.com/resources/group-list.388/) for more information/discussion.

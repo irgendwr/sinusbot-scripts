@@ -1,5 +1,5 @@
 /**
- * Forum:  
+ * Forum:  https://forum.sinusbot.com/resources/group-list.388/
  * GitHub: https://github.com/irgendwr/sinusbot-scripts
  */
 
