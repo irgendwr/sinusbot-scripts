@@ -8,7 +8,7 @@ registerPlugin({
     version: '1.2.0',
     description: 'Create your own custom commands.',
     author: 'Jonas Bögle <dev@sandstorm-projects.de>',
-    backends: ["ts3", "discord"],
+    backends: ['ts3', 'discord'],
     vars: [
         {
             name: 'cmdPrefix',
@@ -126,12 +126,8 @@ registerPlugin({
         }
 
         // FIXME: workaround for discord
-        if (ev.mode == 0) {
-            if (typeof ev.channel == 'undefined') {
-                ev.mode = 1
-            } else {
-                ev.mode = 2
-            }
+        if (ev.mode == 2 && ev.channel == undefined) {
+            ev.mode = 1
             log.d('[workaround] detected message type: ' + ev.mode)
         }
         // TODO: add option to only listen in a specified channel
