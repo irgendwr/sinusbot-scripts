@@ -56,3 +56,5 @@ In the config the following placeholders can be used:
 - %ssl.brand%
 - %ssl.product%
 - %ssl.expires%
+
+## [Group List](group_list.js)
