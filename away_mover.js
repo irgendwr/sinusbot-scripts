@@ -313,128 +313,68 @@ registerPlugin({
     log.i('debug messages are ' + (log.debug ? 'en' : 'dis') + 'abled')
     log.i(info.name + ' v' + info.version + ' by ' + info.author + ' loaded successfully.')
 
-    /*** away ***/
+    var events = [
+        {
+            name: 'away',
+            afk:  'clientAway',
+            back: 'clientBack'
+        },
+        {
+            name: 'mute',
+            afk:  'clientMute',
+            back: 'clientUnmute'
+        },
+        {
+            name: 'deaf',
+            afk:  'clientDeaf',
+            back: 'clientUndeaf'
+        },
+    ]
+    events.forEach(function (ev) {
+        if (config[ev.name + 'Enabled']) {
+            log.d(ev.name + ' is enabled')
 
-    if (config.awayEnabled) {
-        log.d('away move is enabled')
+            event.on(ev.afk, function (client) {
+                log.d(ev.afk + ': ' + client.nick())
 
-        event.on('clientAway', function (client) {
-            log.d('clientAway: ' + client.nick())
+                if (groupIsIncluded(client, config[ev.name + 'SgBlacklist']) && channelIsIncluded(client, config[ev.name + 'ChannelIgnoreType'], config[ev.name + 'ChannelList'])) {
+                    if (getAFK(client)) {
+                        log.d('ignoring event since ' + client.nick() + ' is already afk')
+                        return
+                    }
 
-            if (groupIsIncluded(client, config.awaySgBlacklist) && channelIsIncluded(client, config.awayChannelIgnoreType, config.awayChannelList)) {
-                if (getAFK(client)) {
-                    log.d('ignoring event since ' + client.nick() + ' is already afk')
-                    return
-                }
-
-                if (config.awayDelay) {
-                    log.d('delay enabled (' + config.awayDelay + '), pushing client to queue...')
-
-                    queue.push({
-                        event: 'away',
-                        uid: client.uid(),
-                        timestamp: timestamp()
-                    })
+                    if (config[ev.name + 'Delay']) {
+                        addQueue(client, ev.name)
+                    } else {
+                        setAFK(client, ev.name)
+                    }
                 } else {
-                    setAFK(client, 'away')
+                    log.d('blacklisted, ignoring')
                 }
-            } else {
-                log.d('blacklisted, ignoring')
-            }
+            })
 
-        })
+            event.on(ev.back, function (client) {
+                log.d(ev.back + ': ' + client.nick())
 
-        event.on('clientBack', function (client) {
-            log.d('clientBack: ' + client.nick())
+                var afkClient = getAFK(client)
+                if (afkClient && afkClient.event == ev.name) {
+                    removeAFK(client, config[ev.name + 'MoveBack'])
+                }
+            })
+        }
+    })
 
-            var afkClient = getAFK(client)
-            if (afkClient && afkClient.event == 'away') {
-                removeAFK(client, config.awayMoveBack)
-            }
+    function addQueue(client, event) {
+        log.d('pushing client to queue (' + event + ')')
+
+        queue.push({
+            event: event,
+            uid: client.uid(),
+            timestamp: timestamp()
         })
     }
 
-    /*** mute ***/
-
-    if (config.muteEnabled) {
-        log.d('mute move is enabled')
-
-        event.on('clientMute', function (client) {
-            log.d('clientMute: ' + client.nick())
-
-            if (groupIsIncluded(client, config.muteSgBlacklist) && channelIsIncluded(client, config.muteChannelIgnoreType, config.muteChannelList)) {
-                if (getAFK(client)) {
-                    log.d('ignoring event since ' + client.nick() + ' is already afk')
-                    return
-                }
-
-                if (config.muteDelay) {
-                    log.d('delay enabled (' + config.muteDelay + '), pushing client to queue...')
-
-                    queue.push({
-                        event: 'mute',
-                        uid: client.uid(),
-                        timestamp: timestamp()
-                    })
-                } else {
-                    setAFK(client, 'mute')
-                }
-            } else {
-                log.d('blacklisted, ignoring')
-            }
-        })
-
-        event.on('clientUnmute', function (client) {
-            log.d('clientUnmute: ' + client.nick())
-
-            var afkClient = getAFK(client)
-            if (afkClient && afkClient.event == 'mute') {
-                removeAFK(client, config.muteMoveBack)
-            }
-        })
-    }
-
-    /*** deaf ***/
-
-    if (config.deafEnabled) {
-        log.d('deaf move is enabled')
-
-        event.on('clientDeaf', function (client) {
-            log.d('clientDeaf: ' + client.nick())
-
-            if (groupIsIncluded(client, config.deafSgBlacklist) && channelIsIncluded(client, config.deafChannelIgnoreType, config.deafChannelList)) {
-                if (getAFK(client)) {
-                    log.d('ignoring event since ' + client.nick() + ' is already afk')
-                    return
-                }
-
-                if (config.deafDelay) {
-                    log.d('delay enabled (' + config.deafDelay + '), pushing client to queue...')
-
-                    queue.push({
-                        event: 'deaf',
-                        uid: client.uid(),
-                        timestamp: timestamp()
-                    })
-                } else {
-                    setAFK(client, 'deaf')
-                }
-            } else {
-                log.d('blacklisted, ignoring')
-            }
-        })
-
-        event.on('clientUndeaf', function (client) {
-            log.d('clientUndeaf: ' + client.nick())
-
-            var afkClient = getAFK(client)
-            if (afkClient && afkClient.event == 'deaf') {
-                removeAFK(client, config.deafMoveBack)
-            }
-        })
-    }
-
-    function removeFromQueue(index) {
+    function removeQueue(index) {
         queue.splice(index, 1)
     }
 
@@ -446,7 +386,7 @@ registerPlugin({
             if (!client) {
                 log.d('Error: client not found')
 
-                removeFromQueue(i)
+                removeQueue(i)
                 return
             }
 
@@ -468,7 +408,7 @@ registerPlugin({
                     return
                 }
             }
-            removeFromQueue(i)
+            removeQueue(i)
         })
     }
 
