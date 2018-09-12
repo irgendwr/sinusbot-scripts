@@ -5,7 +5,7 @@
 
 registerPlugin({
     name: 'AFK mover (Away/Mute/Deaf/Idle)',
-    version: '2.2.1',
+    version: '2.3.0',
     description: 'Moves clients that are set as away, have their speakers/mic muted or are idle to a specified channel',
     author: 'Jonas Bögle <jonas@boegle.de>',
     vars: [
