@@ -493,13 +493,19 @@ registerPlugin({
      * @param {string} event away/mute/deaf/idle
      */
     function setAFK(client, event) {
+        if (afkChannel.equals(client.getChannels()[0])) {
+            log.d(client.nick() + ' is already AFK (' + event + ')')
+            return
+        }
+
         log.d(client.nick() + ' is AFK (' + event + ')')
+        var currentChannel = client.getChannels()[0].id()
 
         client.moveTo(afkChannel)
         afk.push({
             event: event,
             uid: client.uid(),
-            prevChannel: client.getChannels()[0].id(),
+            prevChannel: currentChannel,
             timestamp: timestamp()
         })
 
