@@ -519,9 +519,13 @@ registerPlugin({
      * @return {boolean}
      */
     function channelIsIncluded(client, listType, channelList) {
+        if (!listType) {
+            return true
+        }
+
         if (!channelList) {
             // returns true if blacklist
-            return listType == 0
+            return listType != 1
         }
 
         // returns true if (whitelist and included) or (not whitelist and not included)
