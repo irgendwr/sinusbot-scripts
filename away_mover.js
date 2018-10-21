@@ -486,7 +486,9 @@ registerPlugin({
         if (config.notifyEnabled) {
             var msg = 'You were moved to the afk channel, reason: ' + event
             switch (config.notifyType) {
+                case "0":
                 case 0: client.chat(msg); break
+                case "1":
                 case 1: client.poke(msg); break
             }
         }
