@@ -5,7 +5,7 @@
 
 registerPlugin({
     name: 'AFK mover (Away/Mute/Deaf/Idle)',
-    version: '2.3.1',
+    version: '2.3.2',
     description: 'Moves clients that are set as away, have their speakers/mic muted or are idle to a specified channel',
     author: 'Jonas Bögle <jonas@boegle.de>',
     vars: [
@@ -410,8 +410,8 @@ registerPlugin({
     if (config.idleEnabled) {
         log.d('idle move is enabled')
 
-        // check for idle clients every minute
-        setInterval(checkIdle, 1 * 60 * 1000)
+        setInterval(checkIdle, 10 * 1000)
+        checkIdle()
 
         // workaround to improve idle time accuracy
         event.on('clientMove', function (ev) {
@@ -426,7 +426,7 @@ registerPlugin({
                 return
             }
 
-            if (client.getIdleTime() > idleThreshold && lastMoveEvent[client.uid()] < timestamp() - idleThreshold) {
+            if (client.getIdleTime() > idleThreshold && (lastMoveEvent[client.uid()] || 0) < timestamp() - idleThreshold) {
                 if (groupIsIncluded(client, config.idleSgBlacklist) && channelIsIncluded(client, config.idleChannelIgnoreType, config.idleChannelList)) {
                     setAFK(client, 'idle')
                 }
@@ -443,7 +443,7 @@ registerPlugin({
 
         if (afkClient) {
             var moveBack = config[event + 'MoveBack']
-            log.d(client.nick() + 'was away for ' + Math.round((timestamp() - afkClient.timestamp) / 1000) + 's')
+            log.d(client.nick() + ' was away for ' + Math.round((timestamp() - afkClient.timestamp) / 1000) + 's')
             log.d('moveBack: ' + moveBack)
 
             afk[client.uid()][event] = null
