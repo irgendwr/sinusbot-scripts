@@ -190,7 +190,7 @@ registerPlugin({
         /*** idle ***/
         {
             name: 'idleEnabled',
-            title: '[IDLE] Move users who are idle for too long (use with care!)',
+            title: '[IDLE] Move users who are idle for too long',
             type: 'checkbox'
         },
         {
