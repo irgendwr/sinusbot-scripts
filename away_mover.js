@@ -251,6 +251,14 @@ registerPlugin({
             indent: 3,
             conditions: [{ field: 'notifyEnabled', value: true }]
         },
+        {
+            name: 'notifyText',
+            title: 'Notification message (%reason% = away/mute/deaf/idle)',
+            type: 'string',
+            placeholder: 'You were moved to the afk channel, reason: %reason%',
+            indent: 3,
+            conditions: [{ field: 'notifyEnabled', value: true }]
+        },
     ]
 }, function (sinusbot, config, info) {
 
@@ -269,6 +277,7 @@ registerPlugin({
     config.idleThreshold = config.idleThreshold || 0
     config.notifyEnabled = config.notifyEnabled || false
     config.notifyType = config.notifyType || 0
+    config.notifyText = config.notifyText && config.notifyText != '' ? config.notifyText : 'You were moved to the afk channel, reason: %reason%'
     engine.saveConfig(config)
 
     var log = new Logger()
@@ -484,7 +493,7 @@ registerPlugin({
         client.moveTo(afkChannel)
 
         if (config.notifyEnabled) {
-            var msg = 'You were moved to the afk channel, reason: ' + event
+            var msg = config.notifyText.replace(/%reason%/gi, event)
             switch (config.notifyType) {
                 case "0":
                 case 0: client.chat(msg); break
