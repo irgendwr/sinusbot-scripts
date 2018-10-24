@@ -424,7 +424,20 @@ registerPlugin({
 
         // workaround to improve idle time accuracy
         event.on('clientMove', function (ev) {
-            lastMoveEvent[ev.client.uid()] = timestamp()
+            if (ev.toChannel) {
+                lastMoveEvent[ev.client.uid()] = timestamp()
+            } else {
+                // remove client on disconnect
+                delete lastMoveEvent[ev.client.uid()]
+                delete afk[ev.client.uid()]
+            }
+        })
+    } else {
+        event.on('clientMove', function (ev) {
+            if (!ev.toChannel) {
+                // remove client on disconnect
+                delete afk[ev.client.uid()]
+            }
         })
     }
 
