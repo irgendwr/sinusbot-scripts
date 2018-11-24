@@ -7,7 +7,7 @@ registerPlugin({
     name: 'Simple custom commands',
     version: '1.2.0',
     description: 'Create your own custom commands.',
-    author: 'Jonas Bögle <jonas@boegle.de>',
+    author: 'Jonas Bögle <jonas@boegle.me>',
     backends: ['ts3', 'discord'],
     vars: [
         {

@@ -7,7 +7,7 @@ registerPlugin({
     name: 'Group List',
     version: '1.0.0',
     description: 'List the servers groups and their IDs with the `!groups` command.',
-    author: 'Jonas Bögle <jonas@boegle.de>',
+    author: 'Jonas Bögle <jonas@boegle.me>',
     backends: ['ts3', 'discord'],
     vars: []
 }, function (sinusbot, config, info) {
