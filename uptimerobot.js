@@ -5,7 +5,7 @@
 
 registerPlugin({
     name: 'Uptimerobot - Server Status/Uptime Monitoring',
-    version: '2.1.0',
+    version: '2.1.1',
     description: 'Informs you about the status of a server configured on uptimerobot.com',
     author: 'Jonas Bögle <jonas@boegle.de>',
     vars: [
@@ -244,9 +244,9 @@ registerPlugin({
         .replace(/%type%/gi, types[data.type])
         .replace(/%status%/gi, status[data.status])
         .replace(/%id%/gi, data.id)
-        .replace(/%ssl\.brand%/gi, data.ssl.brand)
-        .replace(/%ssl\.product%/gi, data.ssl.product || '')
-        .replace(/%ssl\.expires%/gi, data.ssl.expires ? new Date(data.ssl.expires * 1000).toLocaleString() : '')
+        .replace(/%ssl\.brand%/gi, data.ssl && data.ssl.brand ? data.ssl.brand : '')
+        .replace(/%ssl\.product%/gi, data.ssl && data.ssl.product ? data.ssl.product : '' || '')
+        .replace(/%ssl\.expires%/gi, data.ssl && data.ssl.expires ? new Date(data.ssl.expires * 1000).toLocaleString() : '')
         .replace(/%created%/gi, new Date(data.create_datetime * 1000).toLocaleString())
         .replace(/%last_response_time%/gi, data.response_times && data.response_times.length == 1 ? data.response_times[0].value + 'ms' : '')
         .replace(/%avg_response_time%/gi, data.average_response_time ? data.average_response_time + 'ms' : '')
