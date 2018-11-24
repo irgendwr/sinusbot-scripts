@@ -5,7 +5,7 @@
 
 registerPlugin({
     name: 'Uptimerobot - Server Status/Uptime Monitoring',
-    version: '2.1.1',
+    version: '2.1.2',
     description: 'Informs you about the status of a server configured on uptimerobot.com',
     author: 'Jonas Bögle <jonas@boegle.me>',
     vars: [
@@ -171,7 +171,7 @@ registerPlugin({
             }
         }, function (error, response) {
             // check whether request was successfull
-            if (response.statusCode != 200) {
+            if (error || response.statusCode != 200) {
                 log.e('API request failed: ' + (error || response.statusCode))
                 return
             }
