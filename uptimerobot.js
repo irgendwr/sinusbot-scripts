@@ -73,7 +73,6 @@ registerPlugin({
     var engine = require('engine')
     var backend = require('backend')
     var format = require('format')
-    var http = require('http')
 
     // set default config values
     config.interval = config.interval || 60
@@ -162,7 +161,7 @@ registerPlugin({
             response_times_average: 1
         })
 
-        http.simpleRequest({
+        sinusbot.http({
             method:  'POST',
             url:     'https://api.uptimerobot.com/v2/getMonitors',
             timeout: 6000,
@@ -172,7 +171,7 @@ registerPlugin({
             }
         }, function (error, response) {
             // check whether request was successfull
-            if (error || response.statusCode != 200) {
+            if (response.statusCode != 200) {
                 log.e('API request failed: ' + (error || response.statusCode))
                 return
             }
