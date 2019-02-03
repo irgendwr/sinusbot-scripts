@@ -29,6 +29,12 @@ In the config the following placeholders can be used:
 - %clients%
 - %channels_count%
 
+## [Join/Leave](join_leave.js)
+
+Let the bot join or leave your channel via commands.
+
+See [forum thread]() for more information/discussion.
+
 ## [AFK mover (Away/Mute/Deaf/Idle)](away_mover.js)
 
 This script moves clients that are set as away, have their speakers/mic muted or are idle to a specified channel.
