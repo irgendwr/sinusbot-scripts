@@ -61,7 +61,6 @@ registerPlugin({
         )
 
         return matches.some(user => {
-            engine.log(user.privileges().toString(2))
             // either start/stop or edit bot settings permissions?
             return (user.privileges() & (1 << 8 | 1 << 16)) != 0
         })
