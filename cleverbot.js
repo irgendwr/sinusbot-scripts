@@ -232,6 +232,7 @@ registerPlugin({
      * @param {string} channelID
      */
     function typing(channelID) {
+        // @ts-ignore
         if (channelID.includes('/')) channelID = channelID.split('/')[1];
 
         // @ts-ignore

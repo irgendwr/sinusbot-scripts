@@ -7,7 +7,7 @@ This repository contains a few scripts that I wrote for the [SinusBot](https://s
 1. Download the script and put it in the scripts folder where the SinusBot is installed
 2. Restart the SinusBot
 3. Go to your web-interface: Settings -> Scrips and enable the script by checking the box next to it
-4. configure the script as you like (by clicking on the arrow to show the options)
+4. Configure the script as you like (by clicking on the arrow to show the options and pressing 'save' at the end)
 5. Click on Save changes at the bottom of the page
 
 ## Scripts
@@ -18,7 +18,7 @@ This is a simple script that allows you to create your own commands with custom 
 
 See [forum thread](https://forum.sinusbot.com/resources/custom-commands.226/) for more information/discussion.
 
-#### Config
+**Config:**
 
 In the config the following placeholders can be used:
 
@@ -57,7 +57,7 @@ Informs you about the status of a server configured on [uptimerobot.com](https:/
 
 See [forum thread](https://forum.sinusbot.com/resources/uptimerobot.127/) for more information/discussion.
 
-#### Config
+**Config:**
 
 In the config the following placeholders can be used:
 
@@ -79,7 +79,7 @@ List the servers groups and their IDs with the `!groups` command.
 
 See [forum thread](https://forum.sinusbot.com/resources/group-list.388/) for more information/discussion.
 
-### Troubleshooting
+## Troubleshooting
 
 - make sure that you have the latest version of the SinusBot (some scripts require at least version 1.0.0)
 - make sure that you have the latest version of this script
