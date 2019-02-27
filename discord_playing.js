@@ -48,20 +48,39 @@ registerPlugin({
                 let track = media.getCurrentTrack();
                 let title = track.tempTitle() || track.title()
                 let artist = track.tempArtist() || track.artist()
+                let album = track.album()
+                let duration = track.duration()
+
+                let fields = []
+                if (duration) {
+                    fields.push({
+                        name: "Duration",
+                        value: timestamp(duration),
+                        inline: true
+                    })
+                }
+                if (album) {
+                    fields.push({
+                        name: "Album",
+                        value: album,
+                        inline: true
+                    })
+                }
 
                 // @ts-ignore
-                backend.extended().createMessage(ev.channel.id().split('/')[1], {
+                backend.extended().createMessage(ev.channel.id(), {
                     embed: {
                         title: artist ? `${artist} - ${title}` : title,
+                        url: url || '#',
                         color: 0xe13438,
+                        footer: {
+                          icon_url: "https://sinusbot.github.io/logo.png",
+                          text: "SinusBot"
+                        },
                         thumbnail: {
                             url: url && track.thumbnail() ? `${url}/cache/${track.thumbnail()}` : null
                         },
-                        author: {
-                            name: 'SinusBot',
-                            url: url,
-                            icon_url: 'https://sinusbot.github.io/logo.png',
-                        }
+                        fields: fields
                     }
                 })
             }
@@ -86,5 +105,38 @@ registerPlugin({
         .replace(/%a/gi, artist)
         .replace(/%s/gi, artist ? `${artist} - ${title}` : title)
         backend.getBotClient().setDescription(str)
+    }
+
+    /**
+     *
+     * @param {number} milliseconds
+     */
+    function timestamp(milliseconds) {
+        const SECOND = 1000
+        const MINUTE = 60 * SECOND
+        const HOUR = 60 * MINUTE
+
+        let seconds = Math.floor(milliseconds / SECOND)
+        let minutes = Math.floor(milliseconds / MINUTE)
+        let hours = Math.floor(milliseconds / HOUR)
+        
+        minutes = minutes % (HOUR/MINUTE)
+        seconds = seconds % (MINUTE/SECOND)
+
+        let str = ''
+
+        if (hours !== 0) {
+            str += hours + ':'
+            if (minutes <= 9) {
+                str += '0'
+            }
+        }
+        str += minutes + ':'
+        if (seconds <= 9) {
+            str += '0'
+        }
+        str += seconds
+
+        return str
     }
 })
