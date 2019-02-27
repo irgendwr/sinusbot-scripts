@@ -50,9 +50,9 @@ registerPlugin({
 
         /**
          * Creates a new session.
-         * @param {function} callback
+         * @param {(error?: string) => void} [callback]
          */
-        init(callback=()=>{}) {
+        init(callback) {
             this._send('GET', this.base, null, (error, response) => {
                 if (error) {
                     engine.log(`HTTP Error: ${error}`)
@@ -213,7 +213,7 @@ registerPlugin({
         })
     })
 
-    event.on('chat', ev => {
+    event.on('chat', (/** @type {Message} */ev) => {
         if (ev.channel.id().endsWith(channel)) {
             if (ev.text.startsWith('//') || ev.client.isSelf()) return;
             let start = Date.now()
@@ -232,9 +232,6 @@ registerPlugin({
      * @param {string} channelID
      */
     function typing(channelID) {
-        // @ts-ignore
-        if (channelID.includes('/')) channelID = channelID.split('/')[1];
-
         // @ts-ignore
         backend.extended().rawCommand('POST', `/channels/${channelID}/typing`, {}, err => {
             if (err) {

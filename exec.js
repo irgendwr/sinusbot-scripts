@@ -26,6 +26,11 @@ registerPlugin({
 
     const codeBlockPattern = /^ *```(javascript *\r?\n?)?(?<code>.*)``` *$/si
 
+    /**
+     * Checks if a client is allowed to use admin commands.
+     * @param {Client} client
+     * @returns {boolean}
+     */
     function allowAdminCommands(client) {
         switch (engine.getBackend()) {
             case "discord":
@@ -70,12 +75,12 @@ registerPlugin({
                     const match = code.match(codeBlockPattern)
                     if (match) code = match.groups.code
                     const res = evaluate(code, ev)
-                    if (res.error) reply(`Error:\n${format.code(res.error.stack)}\nDuration: ${res.duration}ms`)
-                    if (!res.error || res.data) reply(`${format.code(res.data)}\nDuration: ${res.duration}ms`)
+                    if (res.error) reply(`Error:\n${format.code(res.error.stack)}\nTook ${res.duration}ms`)
+                    if (!res.error || res.data) reply(`${format.code(res.data)}\nTook ${res.duration}ms`)
                 } else {
                     const res = evaluate(code, ev)
-                    if (res.error) reply(`Error:\n${res.error.stack}\nDuration: ${res.duration}ms`)
-                    if (!res.error || res.data) reply(`${res.data}\nDuration: ${res.duration}ms`)
+                    if (res.error) reply(`Error:\n${res.error.stack}\nTook: ${res.duration}ms`)
+                    if (!res.error || res.data) reply(`${res.data}\nTook: ${res.duration}ms`)
                 }
             })
     })
