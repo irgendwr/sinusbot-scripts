@@ -73,10 +73,10 @@ registerPlugin({
                         title: artist ? `${artist} - ${title}` : title,
                         url: url || '#',
                         color: 0xe13438,
-                        footer: {
+                        /*footer: {
                           icon_url: "https://sinusbot.github.io/logo.png",
                           text: "SinusBot"
-                        },
+                        },*/
                         thumbnail: {
                             url: url && track.thumbnail() ? `${url}/cache/${track.thumbnail()}` : null
                         },
