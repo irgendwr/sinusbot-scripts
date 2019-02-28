@@ -7,7 +7,7 @@ registerPlugin({
     name: 'Join/Leave',
     version: '1.0.1',
     description: 'Let the bot join or leave your channel via commands.',
-    author: 'Jonas Bögle <jonas@boegle.me>',
+    author: 'Jonas Bögle (irgendwr)',
     engine: '>= 1.0.0',
     backends: ['discord'],
     vars: []

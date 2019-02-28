@@ -7,7 +7,7 @@ registerPlugin({
     name: 'Show playing Song in Discord',
     version: '1.0.0',
     description: 'Shows the playing Song in Discord and adds rich-embedd to playing command.',
-    author: 'Jonas Bögle <jonas@boegle.me>',
+    author: 'Jonas Bögle (irgendwr)',
     engine: '>= 1.0.0',
     backends: ['discord'],
     vars: [

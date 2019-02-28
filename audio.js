@@ -7,7 +7,7 @@
     name: 'Audio Filter',
     version: '1.0.0',
     description: 'Set audio filters.',
-    author: 'Jonas Bögle <jonas@boegle.me>',
+    author: 'Jonas Bögle (irgendwr)',
     backends: ['ts3', 'discord'],
     vars: [
         {

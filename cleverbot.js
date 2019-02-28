@@ -7,7 +7,7 @@ registerPlugin({
     name: 'Cleverbot',
     version: '1.0',
     description: 'Talk to cleverbot by using the ask command or in a specified channel.',
-    author: 'Jonas Bögle <jonas@boegle.me>',
+    author: 'Jonas Bögle (irgendwr)',
     backends: ['ts3', 'discord'],
     engine: '>=1.0.0',
     requiredModules: ['http', 'discord-dangerous'],

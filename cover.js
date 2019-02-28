@@ -7,7 +7,7 @@ registerPlugin({
     name: 'Cover',
     version: '1.0.0',
     description: 'Automatically attempts to download a cover image.',
-    author: 'Jonas Bögle <jonas@boegle.me>',
+    author: 'Jonas Bögle (irgendwr)',
     backends: ['ts3', 'discord'],
     requiredModules: ['http'],
     vars: []
