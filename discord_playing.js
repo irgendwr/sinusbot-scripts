@@ -43,7 +43,7 @@ registerPlugin({
         command.createCommand('playing')
         .help('Show what\'s currantly playing')
         .manual('Show what\'s currantly playing')
-        .exec((client, args, reply, ev) => {
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @type {Message} */ev) => {
             if (audio.isPlaying()) {
                 let track = media.getCurrentTrack();
                 let title = track.tempTitle() || track.title()
@@ -67,20 +67,19 @@ registerPlugin({
                     })
                 }
 
-                // @ts-ignore
                 backend.extended().createMessage(ev.channel.id(), {
                     embed: {
                         title: artist ? `${artist} - ${title}` : title,
                         url: url || '#',
                         color: 0xe13438,
-                        /*footer: {
-                          icon_url: "https://sinusbot.github.io/logo.png",
-                          text: "SinusBot"
-                        },*/
                         thumbnail: {
                             url: url && track.thumbnail() ? `${url}/cache/${track.thumbnail()}` : null
                         },
-                        fields: fields
+                        fields: fields,
+                        /*footer: {
+                          icon_url: "https://sinusbot.github.io/logo.png",
+                          text: "SinusBot"
+                        }*/
                     }
                 })
             }

@@ -28,7 +28,7 @@ registerPlugin({
         .help('Moves the SinusBot to your channel')
         .manual('This will move the SinusBot into your channel')
         .checkPermission(hasPermission)
-        .exec((client, args, reply) => {
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply) => {
           var channel = client.getChannels()[0]
           if (!channel) {
               return reply('Unable to join your channel')

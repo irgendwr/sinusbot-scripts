@@ -201,7 +201,7 @@ registerPlugin({
         .help('Ask something')
         .manual('Ask something.')
         .addArgument(command.createArgument('rest').setName('message').min(1))
-        .exec((client, args, reply, ev) => {
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @type {Message} */ev) => {
             let start = Date.now()
             typing(ev.channel.id())
 
@@ -232,7 +232,6 @@ registerPlugin({
      * @param {string} channelID
      */
     function typing(channelID) {
-        // @ts-ignore
         backend.extended().rawCommand('POST', `/channels/${channelID}/typing`, {}, err => {
             if (err) {
                 engine.log(err)
