@@ -25,6 +25,7 @@ In the config the following placeholders can be used:
 - %username%
 - %uid%
 - %dbid%
+- %mention%
 - %description%
 - %ping%
 - %total_connections%

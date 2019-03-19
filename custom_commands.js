@@ -5,7 +5,7 @@
 
 registerPlugin({
     name: 'Simple custom commands',
-    version: '1.2.0',
+    version: '1.3.0',
     description: 'Create your own custom commands.',
     author: 'Jonas Bögle (irgendwr)',
     backends: ['ts3', 'discord'],
@@ -33,7 +33,7 @@ registerPlugin({
                 },
                 {
                     name: 'response',
-                    title: 'Response: (placeholders: %username%, %uid%, %dbid%, %description%, %ping%, %total_connections%, %packetloss%, %bytes_sent%, %bytes_received%, %ip%, %first_join%, %os%, %version%, %clients_count%, %clients%, %channels_count%)',
+                    title: 'Response: (placeholders: %username%, %uid%, %dbid%, %mention%, %description%, %ping%, %total_connections%, %packetloss%, %bytes_sent%, %bytes_received%, %ip%, %first_join%, %os%, %version%, %clients_count%, %clients%, %channels_count%)',
                     type: 'multiline'
                 }
             ]
@@ -90,7 +90,7 @@ registerPlugin({
             }]
         }
     ]
-}, function (sinusbot, config, info) {
+}, function (_, config, info) {
 
     // include modules
     var event = require('event')
@@ -168,17 +168,18 @@ registerPlugin({
     /**
      * Loggs a message, requires engine
      * 
-     * @param {String} str Message
+     * @param {string} str Message
      * @param {Client} client Client
-     * @return {String}
+     * @return {string}
      */
     function replacePlaceholders(str, client) {
         var clients = backend.getClients()
         var channels = backend.getChannels()
+        var discord = engine.getBackend() === 'discord'
 
         str = str.replace(/%(username|user|name|nick)%/gi, client.name())
         .replace(/%uid%/gi, client.uid())
-        .replace(/%dbid%/gi, client.databaseID())
+        .replace(/%dbid%/gi, discord ? client.uid().split('/')[1] : client.databaseID())
         .replace(/%description%/gi, client.description())
         .replace(/%ping%/gi, client.getPing().toString())
         .replace(/%total_connections%/gi, client.getTotalConnections().toString())
@@ -189,6 +190,7 @@ registerPlugin({
         .replace(/%first_join%/gi, client.getCreationTime() > 0 ? new Date(client.getCreationTime()).toLocaleDateString() : 'unknown')
         .replace(/%os%/gi, client.getPlatform())
         .replace(/%version%/gi, client.getVersion())
+        .replace(/%mention%/gi, discord ? '<@'+client.uid().split('/')[1]+'>' : client.getURL())
         .replace(/%clients_count%/gi, clients.length.toString())
         .replace(/%clients%/gi, clients.reduce(function (clstr, client) {
             return clstr += (clstr ? ', ' : '') + client.name()
