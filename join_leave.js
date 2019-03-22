@@ -10,6 +10,7 @@ registerPlugin({
     author: 'Jonas Bögle (irgendwr)',
     engine: '>= 1.0.0',
     backends: ['discord'],
+    //requiredModules: ['discord-dangerous'],
     vars: []
 }, (_, config, meta) => {
     const event = require('event')
@@ -17,6 +18,8 @@ registerPlugin({
     const backend = require('backend')
 
     engine.log(`Loaded ${meta.name} v${meta.version} by ${meta.author}.`)
+
+    let bot = backend.getBotClient()
 
     event.on('load', () => {
         // @ts-ignore
@@ -28,21 +31,31 @@ registerPlugin({
         .help('Moves the SinusBot to your channel')
         .manual('This will move the SinusBot into your channel')
         .checkPermission(hasPermission)
-        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply) => {
-          var channel = client.getChannels()[0]
-          if (!channel) {
-              return reply('Unable to join your channel')
-          }
-          backend.getBotClient().moveTo(channel)
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(msg:string)=>void} */reply) => {
+            var channel = client.getChannels()[0]
+            if (!channel) {
+                return reply('Unable to join your channel')
+            }
+
+            bot = backend.getBotClient() || bot
+            if (!bot) {
+                return reply('The bot is not connected. Set a *Default Channel* in the webinterface and click save.')
+            }
+            bot.moveTo(channel)
         })
 
         command.createCommand('leave')
         .help('Disconnects the SinusBot')
         .manual('This will disconnect the SinusBot from the voice channel')
         .checkPermission(hasPermission)
-        .exec(() => {
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(msg:string)=>void} */reply) => {
+            bot = backend.getBotClient() || bot
+            if (!bot) {
+                return reply('The bot is not connected. Set a *Default Channel* in the webinterface and click save.')
+            }
+
             // @ts-ignore
-            backend.getBotClient().moveTo('')
+            bot.moveTo('')
         })
     })
 
