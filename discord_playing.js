@@ -52,13 +52,11 @@ registerPlugin({
                 let duration = track.duration()
 
                 let fields = []
-                if (duration) {
-                    fields.push({
-                        name: "Duration",
-                        value: timestamp(duration),
-                        inline: true
-                    })
-                }
+                fields.push({
+                    name: "Duration",
+                    value: duration ? timestamp(duration) : 'stream',
+                    inline: true
+                })
                 if (album) {
                     fields.push({
                         name: "Album",
@@ -70,7 +68,7 @@ registerPlugin({
                 backend.extended().createMessage(ev.channel.id(), {
                     embed: {
                         title: artist ? `${artist} - ${title}` : title,
-                        url: url || '#',
+                        url: url ? url : null,
                         color: 0xe13438,
                         thumbnail: {
                             url: url && track.thumbnail() ? `${url}/cache/${track.thumbnail()}` : null
