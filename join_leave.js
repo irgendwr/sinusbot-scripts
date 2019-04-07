@@ -1,5 +1,5 @@
 /**
- * Forum:  
+ * Forum:  https://forum.sinusbot.com/resources/join-leave-commands.423/
  * GitHub: https://github.com/irgendwr/sinusbot-scripts
  */
 
@@ -10,8 +10,11 @@ registerPlugin({
     author: 'Jonas Bögle (irgendwr)',
     engine: '>= 1.0.0',
     backends: ['discord'],
-    //requiredModules: ['discord-dangerous'],
-    vars: []
+    vars: [{
+        title: `The commands !join and !leave can be used by any user that has start/stop or edit bot settings permission.
+To add the start/stop permission you need to enable it for a user account that is bound to the discord identity of your user.
+This can be done under Settings -> User Accounts.`
+    }]
 }, (_, config, meta) => {
     const event = require('event')
     const engine = require('engine')
@@ -24,7 +27,6 @@ registerPlugin({
     let bot = backend.getBotClient()
 
     event.on('load', () => {
-        // @ts-ignore
         const command = require('command')
         if (!command)
             throw new Error('Command.js library not found! Please download Command.js and enable it to be able use this script!')
@@ -64,7 +66,7 @@ registerPlugin({
     /**
      * Checks if a client has the necessary permissons
      * @param {Client} client
-     * @returns {Boolean} true if client has permission
+     * @returns {boolean} true if client has permission
      * @requires engine
      */
     function hasPermission(client) {
