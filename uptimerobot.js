@@ -279,8 +279,11 @@ registerPlugin({
         .replace(/%id%/gi, data.id)
         .replace(/%ssl\.brand%/gi, data.ssl && data.ssl.brand ? data.ssl.brand : '')
         .replace(/%ssl\.product%/gi, data.ssl && data.ssl.product ? data.ssl.product : '' || '')
-        .replace(/%ssl\.expires%/gi, data.ssl && data.ssl.expires ? new Date(data.ssl.expires * 1000).toLocaleString() : '')
-        .replace(/%created%/gi, new Date(data.create_datetime * 1000).toLocaleString())
+        // .replace(/%ssl\.expires%/gi, data.ssl && data.ssl.expires ? new Date(data.ssl.expires * 1000).toLocaleString() : '')
+        // .replace(/%created%/gi, new Date(data.create_datetime * 1000).toLocaleString())
+        // FIXME: wait for Date crash-bug to be fixed :(
+        .replace(/%ssl\.expires%/gi, '')
+        .replace(/%created%/gi, '')
         .replace(/%last_response_time%/gi, data.response_times && data.response_times.length == 1 ? data.response_times[0].value + 'ms' : '')
         .replace(/%avg_response_time%/gi, data.average_response_time ? data.average_response_time + 'ms' : '')
     }
