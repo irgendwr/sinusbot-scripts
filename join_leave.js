@@ -19,6 +19,8 @@ registerPlugin({
 
     engine.log(`Loaded ${meta.name} v${meta.version} by ${meta.author}.`)
 
+    const ERROR_BOT_NULL = 'Unable to change channel :frowning:\nTry to set a *Default Channel* in the webinterface and click save.'
+
     let bot = backend.getBotClient()
 
     event.on('load', () => {
@@ -34,12 +36,12 @@ registerPlugin({
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(msg:string)=>void} */reply) => {
             var channel = client.getChannels()[0]
             if (!channel) {
-                return reply('Unable to join your channel')
+                return reply('I\'m unable to join your channel :frowning:')
             }
 
             bot = backend.getBotClient() || bot
             if (!bot) {
-                return reply('The bot is not connected. Set a *Default Channel* in the webinterface and click save.')
+                return reply(ERROR_BOT_NULL)
             }
             bot.moveTo(channel)
         })
@@ -51,7 +53,7 @@ registerPlugin({
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(msg:string)=>void} */reply) => {
             bot = backend.getBotClient() || bot
             if (!bot) {
-                return reply('The bot is not connected. Set a *Default Channel* in the webinterface and click save.')
+                return reply(ERROR_BOT_NULL)
             }
 
             // @ts-ignore
