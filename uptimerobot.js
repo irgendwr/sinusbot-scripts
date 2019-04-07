@@ -262,13 +262,15 @@ registerPlugin({
      * @returns {string}
      */
     function replacePlaceholders(str, data, fmt) {
+        if (!str || !data) return '';
+
         let status = [
-            fmt ? format.color(PAUSED,  '#000000') : PAUSED,
-            fmt ? format.color(UNKNOWN, '#464646') : UNKNOWN,
-            fmt ? format.color(UP,      '#4da74d') : UP,
+            fmt ? `[color=#000000]${PAUSED}[/color]` : PAUSED,
+            fmt ? `[color=#464646]${UNKNOWN}[/color]` : UNKNOWN,
+            fmt ? `[color=#4da74d]${UP}[/color]` : UP,
         ]
-        status[8] = fmt ? format.color(DOWN, '#ff5e21') : DOWN // "seems down"
-        status[9] = fmt ? format.color(DOWN, '#ff2121') : DOWN
+        status[9] = fmt ? `[color=#ff2121]${DOWN}[/color]` : DOWN
+        status[8] = status[9] // "seems down"
 
         return str.replace(/%name%/gi, data.friendly_name)
         .replace(/%uptime%/gi, data.all_time_uptime_ratio + '%')
