@@ -5,7 +5,7 @@
 
 registerPlugin({
     name: 'Uptimerobot - Server Status/Uptime Monitoring',
-    version: '3.0.0',
+    version: '3.0.1',
     description: 'Informs you about the status of a server configured on uptimerobot.com',
     author: 'Jonas Bögle (irgendwr)',
     engine: '>= 1.0.0',
