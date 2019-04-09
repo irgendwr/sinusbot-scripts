@@ -5,7 +5,7 @@
 
 registerPlugin({
     name: 'Uptimerobot - Server Status/Uptime Monitoring',
-    version: '3.0.1',
+    version: '3.0.2',
     description: 'Informs you about the status of a server configured on uptimerobot.com',
     author: 'Jonas Bögle (irgendwr)',
     engine: '>= 1.0.0',
@@ -294,11 +294,11 @@ registerPlugin({
         .replace(/%avg_response_time%/gi, data.average_response_time ? data.average_response_time + 'ms' : '')
 
         // don't use Date() with sinusbot alpha 6 or lower due to bug
-        if (engine.version() >= '1.0.0-alpha.7') {
+        if (engine.version() > '1.0.0-alpha' && engine.version() < '1.0.0-alpha.7') {
+            str = str.replace(/%ssl\.expires%/gi, '').replace(/%created%/gi, '')
+        } else {
             str = str.replace(/%ssl\.expires%/gi, data.ssl && data.ssl.expires ? new Date(data.ssl.expires * 1000).toLocaleString() : '')
             .replace(/%created%/gi, new Date(data.create_datetime * 1000).toLocaleString())
-        } else {
-            str = str.replace(/%ssl\.expires%/gi, '').replace(/%created%/gi, '')
         }
 
         return str
