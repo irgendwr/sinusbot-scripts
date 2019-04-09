@@ -120,7 +120,6 @@ registerPlugin({
 }, (_, config, meta) => {
     const engine = require('engine')
     const backend = require('backend')
-    const format = require('format')
     const http = require('http')
 
     let servers = config.servers
@@ -160,17 +159,27 @@ registerPlugin({
     function refresh() {
         for (let server of servers) {
             fetchData(server, data => {
-                const channel = backend.getChannelByID(server.channel);
+                if (server.chatEnabled && server.lastStatus != data.status) {
+                    backend.chat(parse(server.chatMessage, data, true, 1024))
+                    server.lastStatus = data.status
+                }
 
                 if (server.channelEnabled) {
+                    if (server.channel == null) {
+                        engine.log('[Error] You enabled "Show status in channel" but didn\'t set a channel.')
+                        server.channelEnabled = false
+                        return
+                    }
+
+                    const channel = backend.getChannelByID(server.channel)
+                    if (!channel) {
+                        engine.log(`[Error] Unable to get channel with ID: ${server.channel}`)
+                        return
+                    }
+
                     channel.setName(parse(server.channelName, data, false, 40))
                     channel.setDescription(parse(server.channelDescription, data, true, 8192))
                 }
-                if (server.chatEnabled && server.lastStatus != data.status) {
-                    backend.chat(parse(server.chatMessage, data, true, 1024))
-                }
-
-                server.lastStatus = data.status
             })
         }
     }
@@ -272,7 +281,7 @@ registerPlugin({
         status[9] = fmt ? `[color=#ff2121]${DOWN}[/color]` : DOWN
         status[8] = status[9] // "seems down"
 
-        return str.replace(/%name%/gi, data.friendly_name)
+        str = str.replace(/%name%/gi, data.friendly_name)
         .replace(/%uptime%/gi, data.all_time_uptime_ratio + '%')
         .replace(/%(url|ip)%/gi, data.url)
         .replace(/%port%/gi, data.port)
@@ -281,13 +290,18 @@ registerPlugin({
         .replace(/%id%/gi, data.id)
         .replace(/%ssl\.brand%/gi, data.ssl && data.ssl.brand ? data.ssl.brand : '')
         .replace(/%ssl\.product%/gi, data.ssl && data.ssl.product ? data.ssl.product : '' || '')
-        // .replace(/%ssl\.expires%/gi, data.ssl && data.ssl.expires ? new Date(data.ssl.expires * 1000).toLocaleString() : '')
-        // .replace(/%created%/gi, new Date(data.create_datetime * 1000).toLocaleString())
-        // FIXME: wait for Date crash-bug to be fixed :(
-        .replace(/%ssl\.expires%/gi, '')
-        .replace(/%created%/gi, '')
         .replace(/%last_response_time%/gi, data.response_times && data.response_times.length == 1 ? data.response_times[0].value + 'ms' : '')
         .replace(/%avg_response_time%/gi, data.average_response_time ? data.average_response_time + 'ms' : '')
+
+        // don't use Date() with sinusbot alpha 6 or lower due to bug
+        if (engine.version() >= '1.0.0-alpha.7') {
+            str = str.replace(/%ssl\.expires%/gi, data.ssl && data.ssl.expires ? new Date(data.ssl.expires * 1000).toLocaleString() : '')
+            .replace(/%created%/gi, new Date(data.create_datetime * 1000).toLocaleString())
+        } else {
+            str = str.replace(/%ssl\.expires%/gi, '').replace(/%created%/gi, '')
+        }
+
+        return str
     }
 
     /**
