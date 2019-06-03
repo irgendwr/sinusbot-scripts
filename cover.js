@@ -39,7 +39,6 @@ registerPlugin({
     var invalids = [];
     
     event.on('track', (/** @type {Track} */ track) => {
-        /*FIXME:
         if (track.thumbnail()) {
             engine.log('skipping: track already has a thumbnail')
             return;
@@ -48,7 +47,6 @@ registerPlugin({
             engine.log('skipping: previously marked as invalid (reload scripts to clear)')
             return;
         }
-        */
         if (track.type() !== '' && track.type() !== 'file') {
             engine.log('skipping: invalid file type')
             return;
@@ -233,7 +231,6 @@ registerPlugin({
             if (images && images.length !== 0) {
                 engine.log('success: '+images[0].thumbnails.large)
                 track.setThumbnailFromURL(images[0].thumbnails.large)
-                //engine.log('success!');
             } else {
                 engine.log('no image found, marking as invalid')
                 invalid(track)
@@ -261,7 +258,6 @@ registerPlugin({
     }
 
     event.on('load', () => {
-        // @ts-ignore
         const command = require('command')
         if (!command)
             throw new Error('Command.js library not found! Please download Command.js and enable it to be able use this script!')
