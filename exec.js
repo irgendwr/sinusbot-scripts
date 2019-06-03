@@ -15,6 +15,7 @@ registerPlugin({
     const engine = require("engine")
     const event = require("event")
     const format = require("format")
+    // import modules for quick use in exec:
     /* eslint-disable */
     const backend = require("backend")
     const helpers = require("helpers")
@@ -61,7 +62,6 @@ registerPlugin({
     }
 
     event.on("load", () => {
-        // @ts-ignore
         const command = require("command")
         if (!command) return engine.log("Command.js not found! Please be sure to install and enable Command.js")
         const {createCommand, createArgument} = command
