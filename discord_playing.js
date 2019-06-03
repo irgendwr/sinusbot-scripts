@@ -35,7 +35,6 @@ registerPlugin({
     engine.log(`Loaded ${meta.name} v${meta.version} by ${meta.author}.`)
 
     event.on('load', () => {
-        // @ts-ignore
         const command = require('command')
         if (!command)
             throw new Error('Command.js library not found! Please download Command.js and enable it to be able use this script!')

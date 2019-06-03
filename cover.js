@@ -266,6 +266,7 @@ registerPlugin({
         .help('Set thumbnail of currently playing track')
         .manual('Set thumbnail of currently playing track')
         .checkPermission(hasEditFilePermission)
+        // @ts-ignore
         .addArgument(command.createArgument('rest').setName('url').min(1))
         .exec((client, args, reply) => {
             let track = media.getCurrentTrack()
