@@ -15,6 +15,6 @@
   },
   "homepage": "https://github.com/irgendwr/sinusbot-scripts#readme",
   "devDependencies": {
-    "sinusbot-scripting-engine": "^1.0.9"
+    "sinusbot-scripting-engine": "^1.0.10"
   }
 }
