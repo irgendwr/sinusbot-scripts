@@ -132,6 +132,9 @@ registerPlugin({
         backend.getBotClient().setDescription(str)
 
         // TODO: update last embed
+        if (last_mid) {
+            editMessage(last_cid, last_mid, getPlayingEmbed())
+        }
     }
 
     /**
@@ -279,6 +282,17 @@ registerPlugin({
      */
     function deleteUserReaction(channelID, messageID, userID, emoji) {
         return discord('DELETE', `/channels/${channelID}/messages/${messageID}/reactions/${emoji}/${userID}`, null, false)
+    }
+
+    /**
+     * Adds a reaction to a message.
+     * @param {string} channelID Channel ID
+     * @param {string} messageID Message ID
+     * @param {object} message New message
+     * @return {Promise<object>}
+     */
+    function editMessage(channelID, messageID, message) {
+        return discord('PATCH', `/channels/${channelID}/messages/${messageID}`, message, true)
     }
 
     /**
