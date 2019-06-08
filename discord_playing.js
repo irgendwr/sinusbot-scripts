@@ -55,8 +55,6 @@ registerPlugin({
                 return reply('There is nothing playing at the moment.')
             }
 
-            
-
             backend.extended().createMessage(ev.channel.id(), getPlayingEmbed(), (err, res) => {
                 if (err) return engine.log(err)
 
@@ -72,6 +70,8 @@ registerPlugin({
                 .then(() => wait(150))
                 .then(() => createReaction(channel_id, id, NEXT))
                 .finally(() => engine.log('added reactions'))
+
+                //TODO: delete other message
             })
         })
     })
@@ -79,27 +79,45 @@ registerPlugin({
     event.on('discord:MESSAGE_REACTION_ADD', ev => {
         const emoji = (ev.emoji.id || '') + ev.emoji.name
 
+        // ignore reactions that are not controls
         if (![PREV, PLAYPAUSE, NEXT].includes(emoji)) return;
+        // ignore reactions from the bot itself
         if (backend.getBotClientID().endsWith(ev.user_id)) return;
 
+        // get user via id
         const client = backend.getClientByID((ev.guild_id ? ev.guild_id+'/' : '')+ev.user_id)
+        // check if user was found
         if (client) {
+            // ignore reactions from the bot itself
             if (client.isSelf()) return;
+            // check if user has the 'playback' permission
             if (hasPlaybackPermission(client)) {
                 switch (emoji) {
                 case PREV:
-                    media.playPrevious()
+                    if (media.getActivePlaylist()) {
+                        media.playPrevious()
+                    } else {
+                        // seek to beginning of track when no playlist is active
+                        audio.seek(0)
+                    }
                     break
                 case PLAYPAUSE:
                     if (audio.isPlaying()) {
-                        store.set('pos', audio.getTrackPosition())
                         media.stop()
                     } else {
-                        if (media.getCurrentTrack()) {
-                            media.getCurrentTrack().play()
+                        const track = media.getCurrentTrack()
+                        if (!track) return;
+
+                        const pos = audio.getTrackPosition()
+                        if (pos && pos < track.duration()) {
+                            // continue playing at last pos
+                            audio.setMute(true)
+                            track.play()
+                            audio.seek(pos)
+                            audio.setMute(false)
+                        } else {
+                            track.play()
                         }
-                        const pos = store.get('pos') || 0
-                        audio.seek(pos)
                     }
                     break
                 case NEXT:
@@ -109,6 +127,7 @@ registerPlugin({
                 engine.log(`${client.nick()} is missing playback permissions for reaction controls`)
             }
         }
+        // delete the rection
         deleteUserReaction(ev.channel_id, ev.message_id, ev.user_id, emoji)
     })
 
@@ -131,7 +150,6 @@ registerPlugin({
         .replace(/%s/gi, artist ? `${artist} - ${title}` : title)
         backend.getBotClient().setDescription(str)
 
-        // TODO: update last embed
         if (last_mid) {
             editMessage(last_cid, last_mid, getPlayingEmbed())
         }
@@ -170,10 +188,10 @@ registerPlugin({
                     url: url && track.thumbnail() ? `${url}/cache/${track.thumbnail()}` : null
                 },
                 fields: fields,
-                /*footer: {
+                footer: {
                     icon_url: "https://sinusbot.github.io/logo.png",
                     text: "SinusBot"
-                }*/
+                }
             }
         };
     }
