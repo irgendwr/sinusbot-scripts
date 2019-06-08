@@ -13,20 +13,13 @@ registerPlugin({
     requiredModules: ['discord-dangerous'],
     vars: [
         {
-            name: 'text',
-            title: 'Text: Use %a for artist, %t for title or %s for a combination of both (preferred)',
-            type: 'string',
-            placeholder: '%s',
-            default: '%s',
-        },
-        {
             name: 'url',
-            title: 'URL to Webinterface (optional, for rich-embed)',
+            title: 'URL to Webinterface (optional, for album covers)',
             type: 'string',
             placeholder: 'i.e. https://sinusbot.example.com'
         }
     ]
-}, (_, {text, url}, meta) => {
+}, (_, {url}, meta) => {
     const event = require('event')
     const engine = require('engine')
     const backend = require('backend')
@@ -40,7 +33,9 @@ registerPlugin({
     const PLAYPAUSE = '⏯'
     const NEXT = '⏭'
 
-    let last_cid, last_mid;
+    // restore lastEmbeds
+    /** @type {object[]} */
+    let lastEmbeds = store.get('lastEmbeds') || [];
 
     event.on('load', () => {
         const command = require('command')
@@ -57,23 +52,57 @@ registerPlugin({
 
             backend.extended().createMessage(ev.channel.id(), getPlayingEmbed(), (err, res) => {
                 if (err) return engine.log(err)
+                if (!res) return engine.log('Error: empty response')
 
-                const {id, channel_id} = JSON.parse(res)
+                const {id, channel_id, embeds} = JSON.parse(res)
 
-                last_mid = id
-                last_cid = channel_id
+                // messages that should be deleted
+                let deleteMsg = []
+                const msgId = ev.message.ID()
+                const index = lastEmbeds.findIndex(embed => embed.channelId == channel_id)
+                if (index !== -1) {
+                    // delete previous embed
+                    deleteMsg.push(lastEmbeds[index].messageId)
+                    deleteMsg.push(lastEmbeds[index].invokeMessageId)
+                    // save new embed
+                    lastEmbeds[index].messageId = id
+                    lastEmbeds[index].invokeMessageId = msgId
+                } else {
+                    // save new embed
+                    lastEmbeds.push({
+                        channelId: channel_id,
+                        messageId: id,
+                        invokeMessageId: msgId
+                    })
+                }
+
+                ev.channel.getMessages({ around: id, limit: '2' }, (err, msgs) => {
+                    if (err || embeds.length !== 1) return;
+                    msgs.forEach(msg => {
+                        // delete "old" message from sinusbot
+                        if (msg.content() == embeds[0].title) {
+                            deleteMsg.push(msg.ID())
+                        }
+                    })
+
+                    // delete messages
+                    deleteMessages(channel_id, deleteMsg)
+                })
 
                 wait(1000)
+                // create reaction controls
                 .then(() => createReaction(channel_id, id, PREV))
                 .then(() => wait(150))
                 .then(() => createReaction(channel_id, id, PLAYPAUSE))
                 .then(() => wait(150))
                 .then(() => createReaction(channel_id, id, NEXT))
-                .finally(() => engine.log('added reactions'))
-
-                //TODO: delete other message
             })
         })
+    })
+
+    event.on('unload', () => {
+        // save lastEmbeds
+        store.set('lastEmbeds', lastEmbeds)
     })
 
     event.on('discord:MESSAGE_REACTION_ADD', ev => {
@@ -94,12 +123,12 @@ registerPlugin({
             if (hasPlaybackPermission(client)) {
                 switch (emoji) {
                 case PREV:
-                    if (media.getActivePlaylist()) {
+                    // if (/* no prev exists*/) {
+                    //     // seek to beginning of track when no playlist is active
+                    //     audio.seek(0)
+                    // } else {
                         media.playPrevious()
-                    } else {
-                        // seek to beginning of track when no playlist is active
-                        audio.seek(0)
-                    }
+                    // }
                     break
                 case PLAYPAUSE:
                     if (audio.isPlaying()) {
@@ -145,14 +174,17 @@ registerPlugin({
         let title = track.tempTitle() || track.title()
         let artist = track.tempArtist() || track.artist()
 
-        let str = text.replace(/%t/gi, title)
-        .replace(/%a/gi, artist)
-        .replace(/%s/gi, artist ? `${artist} - ${title}` : title)
-        backend.getBotClient().setDescription(str)
+        // let str = text.replace(/%t/gi, title)
+        // .replace(/%a/gi, artist)
+        // .replace(/%s/gi, artist ? `${artist} - ${title}` : title)
 
-        if (last_mid) {
-            editMessage(last_cid, last_mid, getPlayingEmbed())
-        }
+        // set track info as status
+        backend.getBotClient().setDescription(artist ? `${artist} - ${title}` : title)
+
+        // update embeds
+        lastEmbeds.forEach(async embed => {
+            await editMessage(embed.channelId, embed.messageId, getPlayingEmbed()).then(() => wait(100))
+        })
     }
 
     /**
@@ -197,7 +229,7 @@ registerPlugin({
     }
 
     /**
-     *
+     * Returns a more human readable timestamp (hours:minutes:secods)
      * @param {number} milliseconds
      */
     function timestamp(milliseconds) {
@@ -230,7 +262,7 @@ registerPlugin({
     }
 
     /**
-     * Checks if a client has the necessary permissons
+     * Checks if a client has the playback permisson.
      * @param {Client} client
      * @returns {boolean} true if client has permission
      * @requires engine
@@ -251,8 +283,8 @@ registerPlugin({
     }
     
     /**
-     * Waits.
-     * @param {number} ms milliseconds
+     * Waits for given milliseconds.
+     * @param {number} ms Time to wait for in milliseconds.
      * @return {Promise}
      */
     function wait(ms) {
@@ -291,7 +323,7 @@ registerPlugin({
     }
 
     /**
-     * Adds a reaction to a message.
+     * Removes a reaction from a message.
      * @param {string} channelID Channel ID
      * @param {string} messageID Message ID
      * @param {string} userID User ID
@@ -303,7 +335,7 @@ registerPlugin({
     }
 
     /**
-     * Adds a reaction to a message.
+     * Edits a message.
      * @param {string} channelID Channel ID
      * @param {string} messageID Message ID
      * @param {object} message New message
@@ -311,6 +343,30 @@ registerPlugin({
      */
     function editMessage(channelID, messageID, message) {
         return discord('PATCH', `/channels/${channelID}/messages/${messageID}`, message, true)
+    }
+
+    /**
+     * Deletes a message.
+     * @param {string} channelID Channel ID
+     * @param {string} messageID Message ID
+     * @return {Promise<object>}
+     */
+    function deleteMessage(channelID, messageID) {
+        return discord('DELETE', `/channels/${channelID}/messages/${messageID}`, null, false)
+    }
+
+    /**
+     * Deletes multiple messages.
+     * @param {string} channelID Channel ID
+     * @param {string[]} messageIDs Message IDs
+     * @return {Promise<object>}
+     */
+    function deleteMessages(channelID, messageIDs) {
+        switch (messageIDs.length) {
+            case 0: return Promise.resolve()
+            case 1: return deleteMessage(channelID, messageIDs[0])
+            default: return discord('POST', `/channels/${channelID}/messages/bulk-delete`, {messages: messageIDs}, false)
+        }
     }
 
     /**
