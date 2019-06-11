@@ -45,7 +45,7 @@ registerPlugin({
         command.createCommand('playing')
         .help('Show what\'s currantly playing')
         .manual('Show what\'s currantly playing')
-        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @type {Message} */ev) => {
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
             if (!audio.isPlaying()) {
                 return reply('There is nothing playing at the moment.')
             }
@@ -121,20 +121,30 @@ registerPlugin({
             if (client.isSelf()) return;
             // check if user has the 'playback' permission
             if (hasPlaybackPermission(client)) {
+                const track = media.getCurrentTrack()
+
                 switch (emoji) {
                 case PREV:
-                    // if (/* no prev exists*/) {
-                    //     // seek to beginning of track when no playlist is active
-                    //     audio.seek(0)
-                    // } else {
+                    // ignore if nothing is playing
+                    if (!audio.isPlaying()) return;
+
+                    if (media.getQueue().length !== 0) {
+                        // start from beginning if we're playing queue
+                        audio.seek(0)
+                    } else {
+                        // try prev (doesn't work for queue or folder)
                         media.playPrevious()
-                    // }
+    
+                        // fallback: start from beginning if there is no previous track
+                        if (!audio.isPlaying()) {
+                            if (track) track.play()
+                        }
+                    }
                     break
                 case PLAYPAUSE:
                     if (audio.isPlaying()) {
                         media.stop()
                     } else {
-                        const track = media.getCurrentTrack()
                         if (!track) return;
 
                         const pos = audio.getTrackPosition()
@@ -145,15 +155,20 @@ registerPlugin({
                             audio.seek(pos)
                             audio.setMute(false)
                         } else {
+                            // or start from beginning if it already ended
                             track.play()
                         }
                     }
                     break
                 case NEXT:
+                    // ignore if nothing is playing
+                    if (!audio.isPlaying()) return;
+                        
                     media.playNext()
                 }
             } else {
                 engine.log(`${client.nick()} is missing playback permissions for reaction controls`)
+                client.chat('🚫 You need the playback permission to use reaction controls')
             }
         }
         // delete the rection
