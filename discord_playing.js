@@ -17,9 +17,15 @@ registerPlugin({
             title: 'URL to Webinterface (optional, for album covers)',
             type: 'string',
             placeholder: 'i.e. https://sinusbot.example.com'
-        }
+        },
+        {
+            name: 'deleteOldMessages',
+            title: 'Delete previous responses if command is used again',
+            type: 'checkbox',
+            default: true
+        },
     ]
-}, (_, {url}, meta) => {
+}, (_, config, meta) => {
     const event = require('event')
     const engine = require('engine')
     const backend = require('backend')
@@ -29,6 +35,7 @@ registerPlugin({
 
     engine.log(`Loaded ${meta.name} v${meta.version} by ${meta.author}.`)
 
+    const url = config.url;
     const PREV = '⏮'
     const PLAYPAUSE = '⏯'
     const NEXT = '⏭'
@@ -58,12 +65,17 @@ registerPlugin({
 
                 // messages that should be deleted
                 let deleteMsg = []
-                const msgId = ev.message.ID()
+                const msgId = ev.message ? ev.message.ID() : 0
                 const index = lastEmbeds.findIndex(embed => embed.channelId == channel_id)
                 if (index !== -1) {
-                    // delete previous embed
-                    deleteMsg.push(lastEmbeds[index].messageId)
-                    deleteMsg.push(lastEmbeds[index].invokeMessageId)
+                    if (config.deleteOldMessages) {
+                        // delete previous embed
+                        deleteMsg.push(lastEmbeds[index].messageId)
+                        // delete previous command from user
+                        if (lastEmbeds[index].messageId) {
+                            deleteMsg.push(lastEmbeds[index].invokeMessageId)
+                        }
+                    }
                     // save new embed
                     lastEmbeds[index].messageId = id
                     lastEmbeds[index].invokeMessageId = msgId
@@ -306,26 +318,6 @@ registerPlugin({
         return new Promise(resolve => setTimeout(resolve, ms))
     }
 
-    // /**
-    //  * Gets a Message.
-    //  * @param {Channel} channel Channel
-    //  * @param {string} messageId Message ID
-    //  * @return {Promise<DiscordMessage>}
-    //  */
-    // function getMessage(channel, messageId) {
-    //     return new Promise((resolve, reject) => {
-    //         // hacky workaround
-    //         // @ts-ignore
-    //         channel.getMessages({ around: messageId, limit: '1'}, (err, messages) => {
-    //             if (err) return reject(err);
-    //             if (!messages || messages.length === 0) return reject('Not found.');
-    //             if (messages.length !== 1) return reject('Invalid response length.');
-
-    //             setTimeout(() => resolve(messages[0]), 100)
-    //         })
-    //     })
-    // }
-
     /**
      * Adds a reaction to a message.
      * @param {string} channelID Channel ID
@@ -389,7 +381,7 @@ registerPlugin({
      * @param {string} method http method
      * @param {string} path path
      * @param {object} [data] json data
-     * @param {boolean} [repsonse] `true` if you're expecting a json response, `false otherwise`
+     * @param {boolean} [repsonse] `true` if you're expecting a json response, `false` otherwise
      * @return {Promise<object>}
      */
     function discord(method, path, data, repsonse=true) {
