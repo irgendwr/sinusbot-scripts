@@ -206,7 +206,14 @@ registerPlugin({
         // .replace(/%s/gi, artist ? `${artist} - ${title}` : title)
 
         // set track info as status
-        backend.getBotClient().setDescription(artist ? `${artist} - ${title}` : title)
+        backend.extended().setStatus({
+            game: {
+                name: artist ? `${artist} - ${title}` : title,
+                type: 2, // => 0 (game), 1 (streaming), 2 (listening)
+            },
+            status: "online",
+            afk: false
+        })
 
         // update embeds
         lastEmbeds.forEach(async embed => {
