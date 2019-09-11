@@ -201,14 +201,18 @@ registerPlugin({
         let title = track.tempTitle() || track.title()
         let artist = track.tempArtist() || track.artist()
 
+        // TODO: readd options for custom status
         // let str = text.replace(/%t/gi, title)
         // .replace(/%a/gi, artist)
         // .replace(/%s/gi, artist ? `${artist} - ${title}` : title)
 
+        const pre = '🎵 '
+        const post = ' 🎵'
+
         // set track info as status
         backend.extended().setStatus({
             game: {
-                name: artist ? `${artist} - ${title}` : title,
+                name: pre + (artist ? `${artist} - ${title}` : title) + post,
                 type: 2, // => 0 (game), 1 (streaming), 2 (listening)
             },
             status: "online",
