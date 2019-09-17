@@ -6,18 +6,41 @@ registerPlugin({
     engine: '>= 1.0.0',
     backends: ['ts3', 'discord'],
     requiredModules: ['discord-dangerous'],
+    //autorun: true,
     vars: [
+        {
+            name: 'discord',
+            title: 'Show discord settings',
+            type: 'checkbox',
+            default: true,
+        },
         {
             name: 'url',
             title: 'URL to Webinterface (optional, for album covers in discord)',
             type: 'string',
-            placeholder: 'i.e. https://sinusbot.example.com'
+            placeholder: 'i.e. https://sinusbot.example.com',
+            conditions: [{ field: 'discord', value: true }],
+        },
+        {
+            name: 'songInStatus',
+            title: 'Show playing song in status.',
+            type: 'checkbox',
+            default: true,
+            conditions: [{ field: 'discord', value: true }],
         },
         {
             name: 'deleteOldMessages',
             title: 'Delete previous responses if !playing command is used again',
             type: 'checkbox',
-            default: true
+            default: true,
+            conditions: [{ field: 'discord', value: true }],
+        },
+        {
+            name: 'createSuccessReaction',
+            title: 'Add a reaction to each command if it was successfull.',
+            type: 'checkbox',
+            default: false,
+            conditions: [{ field: 'discord', value: true }],
         },
     ]
 }, (_, config, meta) => {
@@ -62,9 +85,19 @@ registerPlugin({
     const REACTION_PLAYPAUSE = '⏯';
     const REACTION_NEXT = '⏭';
 
+    // for join/leave
+    const ERROR_BOT_NULL = 'Unable to change channel :frowning:\nTry to set a *Default Channel* in the webinterface and click save.'
+    let bot = backend.getBotClient();
+
     // restore lastEmbeds
     /** @type {object[]} */
     let lastEmbeds = store.get('lastEmbeds') || [];
+
+    if (config.discord && engine.getBackend() != 'discord') {
+        // hide discord-only settings if backend is not discord
+        config.discord = false;
+        engine.saveConfig(config);
+    }
 
     event.on('load', () => {
         const command = require('command');
@@ -79,12 +112,10 @@ registerPlugin({
         .manual('Registers a new user bound to the Account you are using. This account has no privileges by default but can be edited by the bot administrators.')
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
-            // TODO: check if registration is enabled.
-            /*
             if (!engine.registrationEnabled()) {
+                reply('Registration is disabled.');
                 return;
             }
-            */
 
             // print syntax if no username given
             if (!args.username) {
@@ -112,11 +143,14 @@ registerPlugin({
             }
             // set uid
             newUser.setTSUid(client.uid());
+
+            successReaction(ev);
         });
         
         command.createCommand('password')
-        .addArgument(command.createArgument('string').setName('value'))
-        .help('Change your password to <value>')
+        .alias('pass')
+        .addArgument(command.createArgument('rest').setName('value'))
+        .help('Change your password')
         .manual('Changes your password to <value>.')
         .checkPermission(client => {
             return getUserByUid(client.uid()) != null;
@@ -142,6 +176,7 @@ registerPlugin({
             // set password
             user.setPassword(args.value);
             reply(SUCCESS_PREFIX + 'Changed your password.');
+            successReaction(ev);
         });
 
         if (engine.getBackend() == 'discord') {
@@ -194,6 +229,7 @@ registerPlugin({
                     .then(() => wait(150))
                     .then(() => createReaction(channel_id, id, REACTION_NEXT));
                 });
+                successReaction(ev);
             });
         } else {
             command.createCommand('playing')
@@ -216,19 +252,23 @@ registerPlugin({
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
             media.playNext();
+            successReaction(ev);
         });
 
         command.createCommand('prev')
+        .alias('previous')
         .help('Play the previous track')
         .manual('Plays the previous track (only when a playlistis active).')
         .checkPermission(requirePrivileges(PLAYBACK))
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
             media.playPrevious();
+            successReaction(ev);
         });
 
         command.createCommand('search')
-        .addArgument(command.createArgument('string').setName('searchstring'))
+        .alias('s')
+        .addArgument(command.createArgument('rest').setName('searchstring'))
         .help('Search for tracks')
         .manual('Searches for tracks, returns 20 results at most.')
         .checkPermission(requirePrivileges(PLAYBACK, ENQUEUE))
@@ -243,15 +283,18 @@ registerPlugin({
             const tracks = media.search(args.searchstring);
             if (tracks.length == 0) {
                 reply('Sorry, nothing found.');
+                successReaction(ev);
                 return;
             }
 
-            const response = tracks.map(formatTrackWithID).join("\n")
+            const response = tracks.map(formatTrack).join("\n")
             reply(response);
+            successReaction(ev);
         });
 
         command.createCommand('play')
-        .addArgument(command.createArgument('string').setName('idORsearchstring'))
+        .alias('p')
+        .addArgument(command.createArgument('rest').setName('idORsearchstring'))
         .help('Play a track by its id or name')
         .manual('Plays a track by its id or searches for a track and plays the first match.')
         .checkPermission(requirePrivileges(PLAYBACK))
@@ -265,7 +308,7 @@ registerPlugin({
 
             let track = media.getTrackByID(args.idORsearchstring);
             if (!track) {
-                const tracks = media.search(args.searchstring);
+                let tracks = media.search(args.idORsearchstring);
                 if (tracks.length > 0) {
                     track = tracks[0];
                 } else {
@@ -276,23 +319,27 @@ registerPlugin({
 
             track.play();
             reply(`Playing ${formatTrack(track)}`);
+            successReaction(ev);
         });
 
         command.createCommand('queue')
-        .addArgument(command.createArgument('string').setName('idORsearchstring').optional(true))
-        .help('Enqueue a track or resume queue.')
+        .alias('q')
+        .addArgument(command.createArgument('rest').setName('idORsearchstring').optional(true))
+        .help('Enqueue a track or resume queue')
         .manual('Enqueue a track by its id or search for a track and enqueue the first match. When no track is provided it wil resume the queue.')
         .checkPermission(requirePrivileges(PLAYBACK, ENQUEUE))
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
             if (!args.idORsearchstring) {
-                //TODO: media.playQueueNext();
+                if (!audio.isPlaying()) {
+                    media.playQueueNext();
+                }
                 return;
             }
 
             let track = media.getTrackByID(args.idORsearchstring);
             if (!track) {
-                const tracks = media.search(args.searchstring);
+                const tracks = media.search(args.idORsearchstring);
                 if (tracks.length > 0) {
                     track = tracks[0];
                 } else {
@@ -303,11 +350,13 @@ registerPlugin({
 
             track.enqueue();
             reply(`Added ${formatTrack(track)} to the queue`);
+            successReaction(ev);
         });
 
         command.createCommand('queuenext')
-        .addArgument(command.createArgument('string').setName('idORsearchstring'))
-        .help('Prepends a track to the queue.')
+        .alias('qnext', 'qn')
+        .addArgument(command.createArgument('rest').setName('idORsearchstring'))
+        .help('Prepends a track to the queue')
         .manual('Prepends a track by its id or searches for a track and prepends the first match to the queue.')
         .checkPermission(requirePrivileges(ENQUEUENEXT))
         // eslint-disable-next-line no-unused-vars
@@ -320,7 +369,7 @@ registerPlugin({
 
             let track = media.getTrackByID(args.idORsearchstring);
             if (!track) {
-                const tracks = media.search(args.searchstring);
+                const tracks = media.search(args.idORsearchstring);
                 if (tracks.length > 0) {
                     track = tracks[0];
                 } else {
@@ -331,6 +380,7 @@ registerPlugin({
 
             track.enqueue();
             reply(`Added ${formatTrack(track)} to the queue`);
+            successReaction(ev);
         });
 
         command.createCommand('stop')
@@ -340,24 +390,25 @@ registerPlugin({
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
             media.stop();
+            successReaction(ev);
         });
 
-        command.createCommand('stop')
-        .forcePrefix(engine.getCommandPrefix() + '!') // => <prefix>!stop
+        command.createCommand('!stop')
         .help('Stop playback and remove idle-track')
         .manual('Stops playback and removes idle-track.')
         .checkPermission(requirePrivileges(PLAYBACK|EDITBOT))
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
             media.stop();
-
-            //TODO: media.clearIdleTrack()
+            media.clearIdleTrack();
+            successReaction(ev);
         });
 
         command.createCommand('volume')
+        .alias('vol')
         .addArgument(command.createArgument('string').setName('value'))
-        .help('Stop playback and remove idle-track')
-        .manual('Stops playback and removes idle-track.')
+        .help('Change the volume')
+        .manual('Changes the volume.')
         .checkPermission(requirePrivileges(PLAYBACK))
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
@@ -365,10 +416,11 @@ registerPlugin({
             let volume = audio.getVolume();
 
             switch (value) {
-            case "up":
+            case 'up':
                 volume += 10;
                 break;
-            case "down":
+            case 'dn':
+            case 'down':
                 volume -= 10;
                 break;
             default:
@@ -376,7 +428,7 @@ registerPlugin({
                 if (value >= 0 && value <= 100) {
                     volume = value;
                 } else {
-                    reply(USAGE_PREFIX + 'volume <up|down|0-100>');
+                    reply(USAGE_PREFIX + 'volume <up|down|dn|0-100>');
                     return;
                 }
             }
@@ -388,6 +440,7 @@ registerPlugin({
             }
 
             audio.setVolume(volume);
+            successReaction(ev);
         });
 
         command.createCommand('stream')
@@ -405,23 +458,62 @@ registerPlugin({
 
             if (!media.ytStream(args.url)) {
                 reply(ERROR_PREFIX + 'Invalid URL.');
+                return;
             }
+            successReaction(ev);
         });
 
         command.createCommand('say')
-        .addArgument(command.createArgument('string').setName('text'))
+        .addArgument(command.createArgument('rest').setName('text'))
         .help('Say a text via TTS')
         .manual('Uses text-to-speech (if configured) to say the given text.')
         .checkPermission(requirePrivileges(PLAYBACK))
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
-            // print syntax if no url given
+            // print syntax if no text given
             if (!args.text) {
                 reply(USAGE_PREFIX + 'say <text>');
                 return;
             }
 
             audio.say(args.text);
+            successReaction(ev);
+        });
+
+        command.createCommand('sayex')
+        .addArgument(command.createArgument('string').setName('locale'))
+        .addArgument(command.createArgument('rest').setName('text'))
+        .help('Say a text via TTS with given locale')
+        .manual('Uses text-to-speech (if configured) to say the given text with a given locale.')
+        .checkPermission(requirePrivileges(PLAYBACK))
+        // eslint-disable-next-line no-unused-vars
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
+            // print syntax if no locale/text given
+            if (!args.locale || !args.text) {
+                reply(USAGE_PREFIX + 'sayex <locale> <text>');
+                return;
+            }
+
+            audio.say(args.text, args.locale);
+            successReaction(ev);
+        });
+
+        command.createCommand('ttsurl')
+        .addArgument(command.createArgument('string').setName('url'))
+        .help('Set the TTS url.')
+        .manual('Sets the TTS url.')
+        .checkPermission(requirePrivileges(EDITBOT))
+        // eslint-disable-next-line no-unused-vars
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
+            // print syntax if no url given
+            if (!args.url) {
+                reply(USAGE_PREFIX + 'ttsurl <url>');
+                return;
+            }
+
+            // FIXME: implement (wait for new method)
+            reply(ERROR_PREFIX + 'Not implemented yet.');
+            //successReaction(ev);
         });
 
         command.createCommand('yt')
@@ -439,12 +531,14 @@ registerPlugin({
 
             if (!media.yt(args.url)) {
                 reply(ERROR_PREFIX + 'Invalid URL.');
+                return;
             }
+            successReaction(ev);
         });
 
         command.createCommand('ytdl')
         .addArgument(command.createArgument('string').setName('url'))
-        .help('Play <url> via youtube-dl')
+        .help('Download and play <url> via youtube-dl')
         .manual('Plays <url> via external youtube-dl (if enabled); beware: the file will be downloaded first and played back afterwards, so there might be a slight delay before playback starts; additionally, the file will be stored.')
         .checkPermission(requirePrivileges(PLAYBACK|UPLOAD_FILE))
         // eslint-disable-next-line no-unused-vars
@@ -457,7 +551,9 @@ registerPlugin({
 
             if (!media.ytdl(args.url, true)) {
                 reply(ERROR_PREFIX + 'Invalid URL.');
+                return;
             }
+            successReaction(ev);
         });
 
         command.createCommand('qyt')
@@ -475,12 +571,14 @@ registerPlugin({
 
             if (!media.enqueueYt(args.url)) {
                 reply(ERROR_PREFIX + 'Invalid URL.');
+                return;
             }
+            successReaction(ev);
         });
 
         command.createCommand('qytdl')
         .addArgument(command.createArgument('string').setName('url'))
-        .help('Enqueue <url> via youtube-dl')
+        .help('Download and enqueue <url> via youtube-dl')
         .manual('Enqueues <url> via external youtube-dl (if enabled); beware: the file will be downloaded first and played back afterwards, so there might be a slight delay before playback starts; additionally, the file will be stored.')
         .checkPermission(requirePrivileges(PLAYBACK|UPLOAD_FILE, ENQUEUE|UPLOAD_FILE))
         // eslint-disable-next-line no-unused-vars
@@ -493,7 +591,9 @@ registerPlugin({
 
             if (!media.enqueueYtdl(args.url)) {
                 reply(ERROR_PREFIX + 'Invalid URL.');
+                return;
             }
+            successReaction(ev);
         });
 
         command.createCommand('shuffle')
@@ -503,6 +603,8 @@ registerPlugin({
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
             audio.setShuffle(!audio.isShuffle());
+            reply(SUCCESS_PREFIX + `Shuffle is now ${audio.isShuffle() ? 'en' : 'dis'}abled.`);
+            successReaction(ev);
         });
 
         command.createCommand('repeat')
@@ -512,6 +614,8 @@ registerPlugin({
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
             audio.setRepeat(!audio.isRepeat());
+            reply(SUCCESS_PREFIX + `Repeat is now ${audio.isShuffle() ? 'en' : 'dis'}abled.`);
+            successReaction(ev);
         });
 
         command.createCommand('registration')
@@ -524,13 +628,16 @@ registerPlugin({
             switch (args.value) {
             case "enable":
                 engine.enableRegistration();
+                reply(SUCCESS_PREFIX + 'Registration is now enabled.');
+                successReaction(ev);
                 break;
             case "disable":
                 engine.disableRegistration();
+                reply(SUCCESS_PREFIX + 'Registration is now disabled.');
+                successReaction(ev);
                 break;
             default:
-                // TODO: show if it's enabled or not
-                reply(/*`Registartion is currently ${engine.registrationEnabled() ? 'en' : 'dis'}abled\n` +*/ USAGE_PREFIX + 'registration <enable|disable>');
+                reply(`Registartion is currently ${engine.registrationEnabled() ? 'en' : 'dis'}abled.\n` + USAGE_PREFIX + 'registration <enable|disable>');
             }
         });
 
@@ -549,6 +656,16 @@ registerPlugin({
 
             engine.setCommandPrefix(args.prefix);
             reply(SUCCESS_PREFIX + 'New prefix: ' + args.prefix);
+            successReaction(ev);
+        });
+
+        command.createCommand('ping')
+        .help('pong')
+        .manual('Responds with "PONG".')
+        // eslint-disable-next-line no-unused-vars
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
+            reply(`PONG`);
+            successReaction(ev);
         });
 
         command.createCommand('version')
@@ -558,6 +675,56 @@ registerPlugin({
         // eslint-disable-next-line no-unused-vars
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
             reply(`SinusBot v${engine.version()}\ncommand.js v${command.getVersion()}`);
+            successReaction(ev);
+        });
+
+        command.createCommand('reload')
+        .help('Reload scripts')
+        .manual('Reloads scripts.\nPlease Note: New scripts require a complete sinusbot restart.')
+        .checkPermission(requirePrivileges(EDITBOT))
+        // eslint-disable-next-line no-unused-vars
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
+            let success = engine.reloadScripts();
+            if (success) {
+                reply(SUCCESS_PREFIX + `Scripts reloaded.\nNew scripts require a complete sinusbot restart.`);
+                successReaction(ev);
+            } else {
+                reply('Unable to reload scripts. Did you allow it in your `config.ini`?');
+            }
+        });
+
+        
+        command.createCommand('join')
+        .help('Move the SinusBot to your channel')
+        .manual('Moves the SinusBot into your channel.')
+        .checkPermission(requirePrivileges(STARTSTOP))
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(msg:string)=>void} */reply, /** @implements {Message} */ev) => {
+            var channel = client.getChannels()[0]
+            if (!channel) {
+                return reply('I\'m unable to join your channel :frowning:')
+            }
+
+            bot = backend.getBotClient() || bot
+            if (!bot) {
+                return reply(ERROR_BOT_NULL)
+            }
+            bot.moveTo(channel)
+            successReaction(ev);
+        });
+
+        command.createCommand('leave')
+        .help('Disconnect the SinusBot')
+        .manual('Disconnects the SinusBot from the current voice channel.')
+        .checkPermission(requirePrivileges(STARTSTOP))
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(msg:string)=>void} */reply, /** @implements {Message} */ev) => {
+            bot = backend.getBotClient() || bot
+            if (!bot) {
+                return reply(ERROR_BOT_NULL)
+            }
+
+            // @ts-ignore
+            bot.moveTo('')
+            successReaction(ev);
         });
     });
 
@@ -582,6 +749,10 @@ registerPlugin({
             if (client) {
                 // ignore reactions from the bot itself
                 if (client.isSelf()) return;
+
+                // delete the rection
+                deleteUserReaction(ev.channel_id, ev.message_id, ev.user_id, emoji);
+
                 // check if user has the 'playback' permission
                 if (requirePrivileges(PLAYBACK)(client)) {
                     const track = media.getCurrentTrack();
@@ -603,11 +774,16 @@ registerPlugin({
                                 if (track) track.play();
                             }
                         }
-                        break
+                        break;
                     case REACTION_PLAYPAUSE:
                         if (audio.isPlaying()) {
                             media.stop();
                         } else {
+                            // is something in queue? try to resume
+                            if (media.getQueue().length !== 0) {
+                                media.playQueueNext();
+                                return;
+                            }
                             if (!track) return;
 
                             const pos = audio.getTrackPosition()
@@ -622,10 +798,16 @@ registerPlugin({
                                 track.play();
                             }
                         }
-                        break
+                        break;
                     case REACTION_NEXT:
-                        // ignore if nothing is playing
-                        if (!audio.isPlaying()) return;
+                        if (!audio.isPlaying()) {
+                            // is something in queue? try to resume
+                            if (media.getQueue().length !== 0) {
+                                media.playQueueNext();
+                            }
+                            // ignore if nothing is playing
+                            return;
+                        }
                             
                         media.playNext();
                     }
@@ -634,8 +816,6 @@ registerPlugin({
                     client.chat(ERROR_PREFIX + 'You need the playback permission to use reaction controls');
                 }
             }
-            // delete the rection
-            deleteUserReaction(ev.channel_id, ev.message_id, ev.user_id, emoji);
         });
 
         /**
@@ -643,28 +823,33 @@ registerPlugin({
          * @param {Track} track
          */
         const onChange = track => {
-            const prefix = '🎵 ';
-            const postfix = ' 🎵';
+            if (config.songInStatus) {
+                const prefix = '🎵 ';
+                const suffix = ' 🎵';
 
-            // set track info as status
-            backend.extended().setStatus({
-                game: {
-                    name: prefix + formatTrack(track) + postfix,
-                    type: 2, // => 0 (game), 1 (streaming), 2 (listening)
-                },
-                status: "online",
-                afk: false
-            });
+                // set track info as status
+                backend.extended().setStatus({
+                    game: {
+                        name: prefix + formatTrack(track) + suffix,
+                        type: 2, // => 0 (game), 1 (streaming), 2 (listening)
+                    },
+                    status: "online",
+                    afk: false
+                });
+            }
 
             // update embeds
             lastEmbeds.forEach(async embed => {
-                await editMessage(embed.channelId, embed.messageId, getPlayingEmbed()).then(() => wait(100))
+                await editMessage(embed.channelId, embed.messageId, getPlayingEmbed()).then(() => wait(100));
             });
         };
 
         event.on('track', onChange);
         event.on('trackInfo', onChange);
         event.on('trackEnd', () => {
+            if (!config.songInStatus) {
+                return;
+            }
             backend.getBotClient().setDescription('');
         });
     }
@@ -746,10 +931,7 @@ registerPlugin({
      * Returns a function that checks if a given user has all of the required privileges.
      * @param {...number} privileges If at least one privilege matches the returned function will return true.
      */
-    function requirePrivileges() {
-        // get arguments as array
-        let privileges = Array.from(arguments);
-        // return a function that checks the permissions
+    function requirePrivileges(...privileges) {
         return (/** @type {Client} */ client) => {
             // check if at least one user has the required privileges
             return getUsersByClient(client).some(user => {
@@ -814,6 +996,24 @@ registerPlugin({
         str += seconds;
 
         return str;
+    }
+
+    /**
+     * Gives the user feedback if a command was successfull.
+     *
+     * @param {Message} ev
+     */
+    function successReaction(ev) {
+        if (!config.createSuccessReaction) {
+            return;
+        }
+        if (engine.getBackend() == 'discord') {
+            /** @type {DiscordMessage} */
+            let message = ev.message;
+            if (message) {
+                message.createReaction('✅');
+            }
+        }
     }
     
     /**

@@ -1,5 +1,16 @@
 node_modules/
 .vscode
 
+# ignore built-in scripts
 command.js
+advertising.js
+alonemode.js
+bookmark.js
+followme.js
+norecording.js
+rememberChannel.js
+welcome.js
+
+# ignore test stuff
 dev.js
+dev.js.disabled

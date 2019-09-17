@@ -57,8 +57,8 @@ Share the logs via <https://pastebin.com> to reduce spam.
 
         command.createCommand('install')
         .forcePrefix('!')
-        .help('SinusBot Documentation')
-        .manual('SinusBot Documentation')
+        .help('SinusBot Documentation: install')
+        .manual('SinusBot Documentation: install')
         .exec((client, args, /** @type {(message: string)=>void} */reply) => {
             reply(`Linux: <https://sinusbot.github.io/docs/installation/linux/>
 Windows: <https://sinusbot.github.io/docs/installation/windows/>
@@ -67,8 +67,8 @@ Docker: <https://sinusbot.github.io/docs/installation/docker/>`)
 
         command.createCommand('youtube-dl')
         .forcePrefix('!')
-        .help('SinusBot Documentation')
-        .manual('SinusBot Documentation')
+        .help('SinusBot Documentation: youtube-dl')
+        .manual('SinusBot Documentation: youtube-dl')
         .exec((client, args, /** @type {(message: string)=>void} */reply) => {
             reply(`<https://sinusbot.github.io/docs/youtube-dl/>`)
         })
@@ -83,8 +83,8 @@ Docker: <https://sinusbot.github.io/docs/installation/docker/>`)
 
         command.createCommand('scripts')
         .forcePrefix('!')
-        .help('SinusBot Documentation')
-        .manual('SinusBot Documentation')
+        .help('SinusBot Documentation: Scripts')
+        .manual('SinusBot Documentation: Scripts')
         .exec((client, args, /** @type {(message: string)=>void} */reply) => {
             reply(`About writing scripts: <https://sinusbot.github.io/docs/scripts/>
 Scripting Documentation: <https://sinusbot.github.io/scripting-docs/>
@@ -101,16 +101,16 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
 
         command.createCommand('3rdparty')
         .forcePrefix('!')
-        .help('SinusBot Documentation: Licenses')
-        .manual('SinusBot Documentation: Licenses')
+        .help('Reminder: no 3rd party support')
+        .manual('Reminder: We don\'t offer support for 3rd-party scripts.')
         .exec((client, args, /** @type {(message: string)=>void} */reply) => {
             reply(`We don't offer support for 3rd-party scripts. Ask for help in the discussions thread of the script (in the forum) instead.`)
         })
 
         command.createCommand('installer-error')
         .forcePrefix('!')
-        .help('SinusBot Documentation: Licenses')
-        .manual('SinusBot Documentation: Licenses')
+        .help('Reminder: Installer Script support in forum')
+        .manual('Reminder: Issues with the Installer Script should be posted in it\'s forum thread.')
         .exec((client, args, /** @type {(message: string)=>void} */reply) => {
             reply(`Issues with the Installer Script should be posted in it's forum thread: <https://forum.sinusbot.com/threads/sinusbot-installer-script.1200/page-999>`)
         })
@@ -121,6 +121,8 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
         .help('Gives you the groups from the SinusBot Forum')
         .manual('Gives you the groups from the SinusBot Forum.\nThis only works if you set your full discord username (for example: `irgendwr#7476`) in your forum settings: <https://forum.sinusbot.com/account/account-details>.')
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply) => {
+            engine.log(client.nick() + ' used the !roles command');
+
             if (!args.url) {
                 getUser(client).then(user => {
                     const tag = user.username + '#' + user.discriminator
@@ -145,11 +147,13 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
             }, function (error, response) {
                 if (error) {
                     engine.log("Error: " + error);
+                    reply('Error: API error #1 :sad:');
                     return;
                 }
                 
                 if (response.statusCode != 200) {
                     engine.log("HTTP Error: " + response.status);
+                    reply('Error: API error #2 :sad:');
                     return;
                 }
                 
@@ -164,6 +168,7 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
                 // check if parsing was successfull
                 if (res === undefined) {
                     engine.log("Invalid JSON.");
+                    reply('Error: invalid response :sad:');
                     return;
                 }
                 
