@@ -208,6 +208,10 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
                         roles.push(':star: VIP')
                         addRole(client, '454965825317896193')
                     }
+                    if (res.groups.includes('Tier I')) {
+                        roles.push(':heart: Tier I')
+                        addRole(client, '624933507260612608')
+                    }
                     if (res.groups.includes('Donor++')) {
                         roles.push(':heart: Donor++')
                         addRole(client, '454967925544321034')
@@ -225,7 +229,7 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
                         addRole(client, '452456498300452877')
                     }
                     if (roles.length !== 0) {
-                        reply(roles.join('\n'))
+                        reply(`Added ${roles.length} roles:\n${roles.join('\n')}`)
                     } else {
                         reply('You don\'t have any groups in the forum that can be snyced :confused:')
                     }
