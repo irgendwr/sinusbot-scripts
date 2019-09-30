@@ -80,7 +80,7 @@ registerPlugin({
     const SUCCESS_PREFIX = '✔ ';
     const USAGE_PREFIX = ERROR_PREFIX + 'Usage: ';
 
-    const url = config.url;
+    const sinusbotURL = config.url;
     const REACTION_PREV = '⏮';
     const REACTION_PLAYPAUSE = '⏯';
     const REACTION_NEXT = '⏭';
@@ -511,9 +511,25 @@ registerPlugin({
                 return;
             }
 
-            // FIXME: implement (wait for new method)
-            reply(ERROR_PREFIX + 'Not implemented yet.');
-            //successReaction(ev);
+            audio.setTTSURL(args.url);
+            successReaction(ev);
+        });
+
+        command.createCommand('ttslocale')
+        .addArgument(command.createArgument('string').setName('locale'))
+        .help('Set the TTS locale.')
+        .manual('Sets the TTS locale.')
+        .checkPermission(requirePrivileges(EDITBOT))
+        // eslint-disable-next-line no-unused-vars
+        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @implements {Message} */ev) => {
+            // print syntax if no locale given
+            if (!args.locale) {
+                reply(USAGE_PREFIX + 'ttslocale <locale>');
+                return;
+            }
+
+            audio.setTTSDefaultLocale(args.locale);
+            successReaction(ev);
         });
 
         command.createCommand('yt')
@@ -781,7 +797,7 @@ registerPlugin({
                         } else {
                             // is something in queue? try to resume
                             if (media.getQueue().length !== 0) {
-                                media.playQueueNext();
+                                media.resumeQueue();
                                 return;
                             }
                             if (!track) return;
@@ -879,10 +895,10 @@ registerPlugin({
         return {
             embed: {
                 title: formatTrack(track),
-                url: url ? url : null,
+                url: sinusbotURL ? sinusbotURL : null,
                 color: 0xe13438,
                 thumbnail: {
-                    url: url && track.thumbnail() ? `${url}/cache/${track.thumbnail()}` : null
+                    url: sinusbotURL && track.thumbnail() ? `${sinusbotURL}/cache/${track.thumbnail()}` : null
                 },
                 fields: fields,
                 footer: {
@@ -1009,6 +1025,7 @@ registerPlugin({
         }
         if (engine.getBackend() == 'discord') {
             /** @type {DiscordMessage} */
+            // @ts-ignore
             let message = ev.message;
             if (message) {
                 message.createReaction('✅');
