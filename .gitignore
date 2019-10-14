@@ -10,6 +10,7 @@ followme.js
 norecording.js
 rememberChannel.js
 welcome.js
+sinusbot-commands.js
 
 # ignore test stuff
 dev.js
