@@ -283,7 +283,7 @@ registerPlugin({
     })
 
     event.on('chat', (/** @type {Message} */ev) => {
-        if (ev.channel.id().endsWith(channel)) {
+        if (ev.channel && ev.channel.id().endsWith(channel)) {
             if (ev.text.startsWith('//') || ev.client.isSelf()) return;
             let start = Date.now()
             typing(ev.channel.id())
