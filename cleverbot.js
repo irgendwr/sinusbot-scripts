@@ -265,11 +265,11 @@ registerPlugin({
             throw new Error('Command.js library not found! Please download Command.js and enable it to be able use this script!')
         
         command.createCommand('ask')
+        .alias('cleverbot')
         .help('Ask something')
         .manual('Ask something.')
-        // @ts-ignore
-        .addArgument(command.createArgument('rest').setName('message').min(1))
-        .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply, /** @type {Message} */ev) => {
+        .addArgument(args => args.rest.setName('message').min(1))
+        .exec((client, args, reply, ev) => {
             let start = Date.now()
             typing(ev.channel.id())
 
