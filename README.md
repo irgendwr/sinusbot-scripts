@@ -12,7 +12,7 @@ This repository contains a few scripts that I wrote for the [SinusBot](https://s
 
 ## Scripts
 
-### [Simple custom commands](custom_commands.js)
+### [Custom commands](custom_commands.js)
 
 This is a simple script that allows you to create your own commands with custom responses.
 
@@ -20,25 +20,46 @@ See [forum thread](https://forum.sinusbot.com/resources/custom-commands.226/) fo
 
 **Config:**
 
-In the config the following placeholders can be used:
+The the following placeholders can be used in the config:
 
-- %username%
-- %uid%
-- %dbid%
-- %mention%
-- %description%
-- %ping%
-- %total_connections%
-- %packetloss%
-- %bytes_sent%
-- %bytes_received%
-- %ip%
-- %first_join%
-- %os%
-- %version%
-- %clients_count%
-- %clients%
-- %channels_count%
+- username
+- mention
+- uid
+- dbid
+- description
+- ping
+- total_connections
+- packetloss
+- bytes_sent
+- bytes_received
+- ip
+- first_join
+- os
+- version
+- clients_count
+- clients
+- channels_count
+- channels
+- client_groups_count
+- client_groups
+- server_groups_count
+- server_groups
+- playing
+- random(<min>, <max>)
+- randomString(option one, option two, ...)
+- channel_name
+- channel_id
+- channel_url
+- client_channel_name
+- client_channel_id
+- client_channel_url
+
+Example:
+
+```
+Hi {mention}, your ID is: {uid} and you have the following {client_groups_count} groups: {client_groups}.
+Random number between 0 and 100: {random(1, 100)}.
+```
 
 ### [Join/Leave](join_leave.js)
 
