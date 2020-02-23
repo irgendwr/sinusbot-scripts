@@ -32,14 +32,14 @@ registerPlugin({
     event.on('load', () => {
         const command = require('command')
         if (!command)
-            throw new Error('Command.js library not found! Please download Command.js and enable it to be able use this script!')
-        
+            throw new Error('command.js library not found! Please download command.js and enable it to be able use this script!')
+
         command.createCommand('needinfo')
         .forcePrefix('!')
         .help('Lists required information that we need to be able to help')
         .manual('Lists required information that we need to be able to help.')
         .exec((client, args, /** @type {(message: string)=>void} */reply) => {
-            reply(`Please send us **all of the information** listed below, depending on your OS.
+            reply(`Please **send us all of the information listed below**, depending on your OS.
 
 > :penguin: **Linux**
 1) Output of the diagnostic script: <https://forum.sinusbot.com/threads/diagscript.831/>
@@ -51,10 +51,60 @@ Share these via <https://pastebin.com> to reduce spam.
 2) SinusBot version (<https://sinusbot.github.io/docs/faq/general/#what-is-my-version>)
 3) TeamSpeak Client version
 4) Instance log / SinusBot log (set \`LogLevel = 10\` in your \`config.ini\` before)
-Share the logs via <https://pastebin.com> to reduce spam.
-5) *Web-Browser and plugins (only if relevant for the problem)*`)
+Share the logs via <https://pastebin.com> to reduce spam.`)
         })
 
+        command.createCommand('needinfo-linux')
+        .alias('needinfolinux', 'linuxinfo')
+        .forcePrefix('!')
+        .help('Lists required information that we need to be able to help')
+        .manual('Lists required information that we need to be able to help.')
+        .exec((client, args, /** @type {(message: string)=>void} */reply) => {
+            reply(`Please **send us all of the information listed below**. *This assumes you're using Linux*
+
+1) **Send us the output of the diagnostic script**:
+\`\`\`bash
+# before running the diag script you might need to install depencencies
+apt-get install bc binutils coreutils lsb-release util-linux net-tools curl
+# change to your path:
+cd /opt/sinusbot/
+# execute with root privileges, sudo may be required:
+bash <(wget -O - 'https://raw.githubusercontent.com/patschi/sinusbot-tools/master/tools/diagSinusbot.sh')
+\`\`\`
+2) And the **Instance log / SinusBot log** (set \`LogLevel = 10\` in your \`config.ini\` before)
+**Share these via <https://pastebin.com>** to reduce spam.`)
+        })
+
+        command.createCommand('needinfo-windows')
+        .alias('needinfo-win', 'needinfowindows', 'needinfowin', 'windowsinfo', 'wininfo')
+        .forcePrefix('!')
+        .help('Lists required information that we need to be able to help')
+        .manual('Lists required information that we need to be able to help.')
+        .exec((client, args, /** @type {(message: string)=>void} */reply) => {
+            reply(`Please **send us all of the information listed below**. *This assumes you're using Windows*
+
+1) OS (operating system), e.g. *Windows 10 64bit*
+2) SinusBot version (<https://sinusbot.github.io/docs/faq/general/#what-is-my-version>)
+3) TeamSpeak Client version
+4) Instance log / SinusBot log (set \`LogLevel = 10\` in your \`config.ini\` before)
+Share the logs via <https://pastebin.com> to reduce spam.`)
+        })
+
+        command.createCommand('diagscript')
+        .forcePrefix('!')
+        .help('SinusBot Documentation: diagscript')
+        .manual('SinusBot Documentation: diagscript')
+        .exec((client, args, /** @type {(message: string)=>void} */reply) => {
+            reply(`\`\`\`bash
+# before running the diag script you might need to install depencencies
+apt-get install bc binutils coreutils lsb-release util-linux net-tools curl
+# change to your path:
+cd /opt/sinusbot/
+# execute with root privileges, sudo may be required:
+bash <(wget -O - 'https://raw.githubusercontent.com/patschi/sinusbot-tools/master/tools/diagSinusbot.sh')
+\`\`\``)
+        })
+        
         command.createCommand('install')
         .forcePrefix('!')
         .help('SinusBot Documentation: install')
@@ -66,6 +116,7 @@ Docker: <https://sinusbot.github.io/docs/installation/docker/>`)
         })
 
         command.createCommand('youtube-dl')
+        .alias('ytdldoc', 'ytdldocs')
         .forcePrefix('!')
         .help('SinusBot Documentation: youtube-dl')
         .manual('SinusBot Documentation: youtube-dl')
@@ -82,6 +133,7 @@ Docker: <https://sinusbot.github.io/docs/installation/docker/>`)
         })
 
         command.createCommand('scripts')
+        .alias('scripting')
         .forcePrefix('!')
         .help('SinusBot Documentation: Scripts')
         .manual('SinusBot Documentation: Scripts')
@@ -91,7 +143,8 @@ Scripting Documentation: <https://sinusbot.github.io/scripting-docs/>
 Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
         })
 
-        command.createCommand('lic')
+        command.createCommand('license')
+        .alias('lic')
         .forcePrefix('!')
         .help('SinusBot Documentation: Licenses')
         .manual('SinusBot Documentation: Licenses')
@@ -100,6 +153,7 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
         })
 
         command.createCommand('3rdparty')
+        .alias('noscriptsupport', 'scriptsupport')
         .forcePrefix('!')
         .help('Reminder: no 3rd party support')
         .manual('Reminder: We don\'t offer support for 3rd-party scripts.')
@@ -108,6 +162,7 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
         })
 
         command.createCommand('installer-error')
+        .alias('installererror')
         .forcePrefix('!')
         .help('Reminder: Installer Script support in forum')
         .manual('Reminder: Issues with the Installer Script should be posted in it\'s forum thread.')
@@ -116,13 +171,12 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
         })
 
         command.createCommand('roles')
+        .alias('groups')
         .forcePrefix('!')
         .addArgument(command.createArgument('string').setName('url'))
         .help('Gives you the groups from the SinusBot Forum')
         .manual('Gives you the groups from the SinusBot Forum.\nThis only works if you set your full discord username (for example: `irgendwr#7476`) in your forum settings: <https://forum.sinusbot.com/account/account-details>.')
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(message: string)=>void} */reply) => {
-            engine.log(client.nick() + ' used the !roles command');
-
             if (!args.url) {
                 getUser(client).then(user => {
                     const tag = user.username + '#' + user.discriminator
