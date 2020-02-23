@@ -239,7 +239,9 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
 
                     const len = roles.length
                     if (len !== 0) {
-                        reply(`Added ${len} role${len == 1 ? '' : 's'}:\n${roles.join('\n')}`)
+                        reply(`Welcome ${client.getURL()}! :slight_smile:
+Added ${len} role${len == 1 ? '' : 's'} from account ${id}:\n${roles.join('\n')}`)
+                        engine.log(`${client.nick()} (${client.uid()}) synced roles from ${id}: ${roles.join()}`)
                     } else {
                         reply('You don\'t have any groups in the forum that can be snyced :confused:')
                     }
