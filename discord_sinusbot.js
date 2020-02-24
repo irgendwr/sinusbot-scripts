@@ -28,6 +28,7 @@ registerPlugin({
     engine.log(`Loaded ${meta.name} v${meta.version} by ${meta.author}.`)
 
     const urlPattern = /^https:\/\/forum\.sinusbot\.com\/members\/(?:.*\.)?(\d+)\/(?:#.*)?$/;
+    const tagPattern = /^<@!\d{18}>$/;
 
     event.on('load', () => {
         const command = require('command')
@@ -36,11 +37,15 @@ registerPlugin({
 
         command.createCommand('needinfo')
         .forcePrefix('!')
+        .addArgument(command.createArgument('string').setName('user').optional())
         .help('Lists required information that we need to be able to help')
         .manual('Lists required information that we need to be able to help.')
-        .exec((client, args, /** @type {(message: string)=>void} */reply) => {
-            reply(`Please **send us all of the information listed below**, depending on your OS.
-
+        .exec((client, args, /** @type {(message: string)=>void} */reply, ev) => {
+            let pre = 'Please **send us all of the information listed below**, depending on your OS.\n'
+            if (tagPattern.exec(args.user) != null) {
+                pre = `Hi ${args.user}! ` + pre
+            }
+            reply(pre + `
 > :penguin: **Linux**
 1) Output of the diagnostic script: <https://forum.sinusbot.com/threads/diagscript.831/>
 2) Instance log / SinusBot log (set \`LogLevel = 10\` in your \`config.ini\` before)
@@ -51,16 +56,25 @@ Share these via <https://pastebin.com> to reduce spam.
 2) SinusBot version (<https://sinusbot.github.io/docs/faq/general/#what-is-my-version>)
 3) TeamSpeak Client version
 4) Instance log / SinusBot log (set \`LogLevel = 10\` in your \`config.ini\` before)
-Share the logs via <https://pastebin.com> to reduce spam.`)
+**Share these via <https://pastebin.com>** to reduce spam.
+
+*This automated message was triggered by ${client.getURL()}*`)
+            // try to delete original message to reduce spam
+            ev.message.delete()
         })
 
         command.createCommand('needinfo-linux')
-        .alias('needinfolinux', 'linuxinfo')
+        .alias('needinfolinux', 'linuxinfo', 'infolinux')
         .forcePrefix('!')
+        .addArgument(command.createArgument('string').setName('user').optional())
         .help('Lists required information that we need to be able to help')
         .manual('Lists required information that we need to be able to help.')
-        .exec((client, args, /** @type {(message: string)=>void} */reply) => {
-            reply(`Please **send us all of the information listed below**. *This assumes you're using Linux*
+        .exec((client, args, /** @type {(message: string)=>void} */reply, ev) => {
+            let pre = 'Please **send us all of the information listed below**.'
+            if (tagPattern.exec(args.user) != null) {
+                pre = `Hi ${args.user}! ` + pre
+            }
+            reply(pre + ` *This assumes you're using Linux*
 
 1) **Send us the output of the diagnostic script**:
 \`\`\`bash
@@ -72,22 +86,35 @@ cd /opt/sinusbot/
 bash <(wget -O - 'https://raw.githubusercontent.com/patschi/sinusbot-tools/master/tools/diagSinusbot.sh')
 \`\`\`
 2) And the **Instance log / SinusBot log** (set \`LogLevel = 10\` in your \`config.ini\` before)
-**Share these via <https://pastebin.com>** to reduce spam.`)
+**Share these via <https://pastebin.com>** to reduce spam.
+
+*This automated message was triggered by ${client.getURL()}*`)
+            // try to delete original message to reduce spam
+            ev.message.delete()
         })
 
         command.createCommand('needinfo-windows')
-        .alias('needinfo-win', 'needinfowindows', 'needinfowin', 'windowsinfo', 'wininfo')
+        .alias('needinfo-win', 'needinfowindows', 'needinfowin', 'windowsinfo', 'wininfo', 'infowin')
         .forcePrefix('!')
+        .addArgument(command.createArgument('string').setName('user').optional())
         .help('Lists required information that we need to be able to help')
         .manual('Lists required information that we need to be able to help.')
-        .exec((client, args, /** @type {(message: string)=>void} */reply) => {
-            reply(`Please **send us all of the information listed below**. *This assumes you're using Windows*
+        .exec((client, args, /** @type {(message: string)=>void} */reply, ev) => {
+            let pre = 'Please **send us all of the information listed below**.'
+            if (tagPattern.exec(args.user) != null) {
+                pre = `Hi ${args.user}! ` + pre
+            }
+            reply(pre + ` *This assumes you're using Windows*
 
 1) OS (operating system), e.g. *Windows 10 64bit*
 2) SinusBot version (<https://sinusbot.github.io/docs/faq/general/#what-is-my-version>)
 3) TeamSpeak Client version
 4) Instance log / SinusBot log (set \`LogLevel = 10\` in your \`config.ini\` before)
-Share the logs via <https://pastebin.com> to reduce spam.`)
+**Share the logs via <https://pastebin.com> to reduce spam.**
+
+*This automated message was triggered by ${client.getURL()}*`)
+            // try to delete original message to reduce spam
+            ev.message.delete()
         })
 
         command.createCommand('diagscript')
