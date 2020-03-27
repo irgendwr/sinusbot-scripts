@@ -9,7 +9,12 @@ registerPlugin({
     description: 'List the servers groups and their IDs with the `!groups` command.',
     author: 'Jonas Bögle (irgendwr)',
     backends: ['ts3', 'discord'],
-    vars: []
+    vars: [{
+        name: 'admins',
+        title: 'UIDs of users which have access to the command',
+        type: 'strings',
+        default: []
+    }]
 }, (_, config, meta) => {
     const event = require('event')
     const engine = require('engine')
@@ -24,19 +29,44 @@ registerPlugin({
             throw new Error('Command.js library not found! Please download Command.js and enable it to be able use this script!')
 
         command.createCommand('groups')
+        .alias('grouplist')
         .help('Lists the servers groups and their IDs')
         .manual('Lists the servers groups and their IDs')
+        .checkPermission(allowAdminCommands)
+        .addArgument(command.createArgument('string').setName('name').optional())
         .exec((/** @type {Client} */client, /** @type {object} */args, /** @type {(msg:string)=>void} */reply) => {
-            var resp = format.bold('Groups:')
-            // TODO: split into multiple messages if too long
-            backend.getServerGroups().forEach(function (group) {
-                resp += '\n * `' + group.name() + '`, ID: `' + group.id() + '`'
-            })
+            let resp = format.bold('Groups:')
+            if (args.name && args.name  !== '') {
+                // TODO: split into multiple messages if too long
+                backend.getServerGroups().forEach(group => {
+                    if (group.name().includes(args.name)) {
+                        resp += '\n * `' + group.name() + '`, ID: `' + group.id() + '`'
+                    }
+                })
+            } else {
+                // TODO: split into multiple messages if too long
+                backend.getServerGroups().forEach(group => {
+                    resp += '\n * `' + group.name() + '`, ID: `' + group.id() + '`'
+                })
+            }
 
             reply(resp)
         })
-
-        //TODO: maybe add a command to search for groups?
-        //TODO: add permissions to commands? via settings or sinusbot permissions?
     })
+
+    /**
+     * Checks if a client is allowed to use admin commands.
+     * @param {Client} client
+     * @returns {boolean}
+     */
+    function allowAdminCommands(client) {
+        switch (engine.getBackend()) {
+            case "discord":
+                return config.admins.includes(client.uid().split("/")[1])
+            case "ts3":
+                return config.admins.includes(client.uid())
+            default:
+                throw new Error(`Unknown backend ${engine.getBackend()}`)
+        }
+    }
 })
