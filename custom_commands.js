@@ -258,7 +258,8 @@ registerPlugin({
     event.on('load', () => {
         const command = require('command');
         if (!command) {
-            engine.log('command.js library not found! Please download command.js and enable it to be able use this script!');
+            engine.log('command.js library not found! Please download command.js to your scripts folder and restart the SinusBot, otherwise this script will not work.');
+            engine.log('command.js can be found here: https://github.com/Multivit4min/Sinusbot-Command/blob/master/command.js');
             return;
         }
 

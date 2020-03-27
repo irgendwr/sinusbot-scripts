@@ -259,8 +259,11 @@ registerPlugin({
 
     event.on('load', () => {
         const command = require('command')
-        if (!command)
-            throw new Error('Command.js library not found! Please download Command.js and enable it to be able use this script!')
+        if (!command) {
+            engine.log('command.js library not found! Please download command.js to your scripts folder and restart the SinusBot, otherwise this script will not work.');
+            engine.log('command.js can be found here: https://github.com/Multivit4min/Sinusbot-Command/blob/master/command.js');
+            return;
+        }
 
         command.createCommand('setthumbnail')
         .help('Set thumbnail of currently playing track')
