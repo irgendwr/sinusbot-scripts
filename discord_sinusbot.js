@@ -28,7 +28,7 @@ registerPlugin({
     engine.log(`Loaded ${meta.name} v${meta.version} by ${meta.author}.`)
 
     const urlPattern = /^https:\/\/forum\.sinusbot\.com\/members\/(?:.*\.)?(\d+)\/(?:#.*)?$/;
-    const tagPattern = /^<@!\d{18}>$/;
+    const tagPattern = /^ ?<@!?\d{18}> ?$/;
 
     event.on('load', () => {
         const command = require('command')
