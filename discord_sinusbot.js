@@ -362,6 +362,8 @@ Added ${len} role${len == 1 ? '' : 's'} from account ${id}:\n${roles.join('\n')}
      * @param {object} [data] json data
      * @param {boolean} [repsonse] `true` if you're expecting a json response, `false` otherwise
      * @return {Promise<object>}
+     * @author Jonas Bögle
+     * @license MIT
      */
     function discord(method, path, data, repsonse=true) {
         //engine.log(`${method} ${path}`)
