@@ -274,7 +274,7 @@ registerPlugin({
      * @returns {boolean} if member was renamed
      */
     function processMember(member, nick) {
-        if (member.nick && member.nick == nick) {
+        if ((member.nick && member.nick == nick) || (!nick && !member.nick)) {
             return false;
         }
 
