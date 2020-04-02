@@ -58,10 +58,10 @@ registerPlugin({
         engine.log('Please set the guild ID in the config.');
         return;
     }
-    if (!config.name) {
+    /*if (!config.name) {
         engine.log('Please set the name in the config.');
         return;
-    }
+    }*/
 
     // see https://discordapp.com/developers/docs/topics/gateway#rate-limiting
     const DELAY = (config.delay || 30) * 1000;
@@ -79,7 +79,7 @@ registerPlugin({
         }
 
         command.createCommand('rename-everyone')
-        .alias('renameeveryone', 'RE')
+        .alias('RE')
         .addArgument(command.createArgument('rest').setName('name').optional())
         .help('Rename everyone')
         .manual('Renames everyone.')
@@ -101,9 +101,31 @@ registerPlugin({
                 reply(`Done! ${previousNicks.length} entries stored, see log for more.`);
             })
         })
+
+        command.createCommand('rename-everyone-clear')
+        .alias('RE-clear')
+        .help('Rename everyone')
+        .manual('Renames everyone.')
+        .checkPermission(allowAdminCommands)
+        .exec((client, args, reply, ev) => {
+            stop = true;
+            previousName = config.name;
+            config.name = "";
+            config.join = false;
+            //engine.saveConfig(config);
+
+            engine.log(`clearing everyones nickname...`)
+            reply(`Clearing everyones nickname.\nPlease wait, this may take very *very* long...`)
+            
+            stop = false;
+            renameEveryone(config.name).then(() => {
+                engine.log(`done`)
+                reply(`Done!`);
+            })
+        })
         
-        command.createCommand('stop-rename-everyone')
-        .alias('rename-everyone-stop', 'stop-renaming-everyone', 'renameeveryone-stop', 'RE-STOP')
+        command.createCommand('rename-everyone-stop')
+        .alias('RE-stop')
         .help('Stop renaming everyone')
         .manual('Stops renaming everyone.')
         .checkPermission(allowAdminCommands)
@@ -127,8 +149,8 @@ registerPlugin({
             reply(`${previousNicks.length} entries found, see log for more`);
         })
 
-        command.createCommand('rename-everyone-rm-previous')
-        .alias('RE-rm-previous')
+        command.createCommand('rename-everyone-previous-rm')
+        .alias('RE-previous-rm')
         .help('Remove previous nichnames')
         .manual('Removes previous nichnames.')
         .checkPermission(allowAdminCommands)
