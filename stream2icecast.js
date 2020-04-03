@@ -11,7 +11,7 @@ registerPlugin({
             name: 'streamServer',
             title: 'StreamServer URL',
             type: 'string',
-            placeholder: 'http://sv.something.com:8000/example'
+            placeholder: 'http://something.example.com:8000/example'
         },
         {
             name: 'streamUser',
