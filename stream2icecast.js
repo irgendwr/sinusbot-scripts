@@ -1,7 +1,7 @@
 registerPlugin({
     name: 'stream2icecast',
     version: '1.0.1',
-    description: 'Streams the bots autio to an icecast server.',
+    description: 'Streams the bots audio to an icecast server.',
     author: 'SinusBot Team',
     backends: ['ts3', 'discord'],
     vars: [
