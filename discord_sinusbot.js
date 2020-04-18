@@ -86,7 +86,7 @@ apt-get install bc binutils coreutils lsb-release util-linux net-tools curl
 # change to your path:
 cd /opt/sinusbot/
 # execute with root privileges, sudo may be required:
-bash <(wget -O - 'https://raw.githubusercontent.com/patschi/sinusbot-tools/master/tools/diagSinusbot.sh')
+bash <(wget -O - https://raw.githubusercontent.com/patschi/sinusbot-tools/master/tools/diagSinusbot.sh)
 \`\`\`
 2) And the **Instance log / SinusBot log** (set \`LogLevel = 10\` in your \`config.ini\` before)
 **Share these via <https://pastebin.com>** to reduce spam.
@@ -131,7 +131,7 @@ apt-get install bc binutils coreutils lsb-release util-linux net-tools curl
 # change to your path:
 cd /opt/sinusbot/
 # execute with root privileges, sudo may be required:
-bash <(wget -O - 'https://raw.githubusercontent.com/patschi/sinusbot-tools/master/tools/diagSinusbot.sh')
+bash <(wget -O - https://raw.githubusercontent.com/patschi/sinusbot-tools/master/tools/diagSinusbot.sh)
 \`\`\``)
         })
         
@@ -212,7 +212,7 @@ Scripts: <https://forum.sinusbot.com/resources/categories/scripts.2/>`)
                     const tag = user.username + '#' + user.discriminator
                     reply(`To get the groups from your forum account you need to:
 1) Set your full discord username \`${tag}\` in your forum settings: <https://forum.sinusbot.com/account/account-details>
-2) Write \`!roles <link_to_your_profile>\` in <#534460311575461940>`)
+2) Write \`!roles <link to your profile>\` in <#534460311575461940>`)
                 })
                 return;
             }
