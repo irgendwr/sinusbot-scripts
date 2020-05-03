@@ -44,11 +44,12 @@ registerPlugin({
     }
 
     // eslint-disable-next-line no-unused-vars
-    function evaluate(code, ev) {
+    function evaluate(code, ev, reply) {
         const start = Date.now()
         let data = null
         let error = null
         try {
+            const client = ev.client
             // eslint-disable-next-line no-eval
             data = eval(code)
         } catch (e) {
@@ -68,23 +69,36 @@ registerPlugin({
             engine.log('command.js can be found here: https://github.com/Multivit4min/Sinusbot-Command/blob/master/command.js');
             return;
         }
-        const {createCommand, createArgument} = command
+        const {createCommand} = command
 
         createCommand("exec")
+            .alias('eval', 'run')
             .help("Executes a raw command within Sinusbot")
-            .addArgument(createArgument("rest").setName("code"))
+            .addArgument(arg => arg.rest.setName("code"))
             .checkPermission(allowAdminCommands)
             .exec((client, {code}, reply, ev) => {
                 if (engine.getBackend() === "discord") {
                     const match = code.match(codeBlockPattern)
                     if (match) code = match.groups.code
-                    const res = evaluate(code, ev)
-                    if (res.error) reply(`Error:\n${format.code(res.error.stack)}\nTook ${res.duration}ms`)
-                    if (!res.error || res.data) reply(`${format.code(res.data)}\nTook ${res.duration}ms`)
+                    const res = evaluate(code, ev, reply)
+                    const duration = `Duration: ${res.duration}ms`
+                    if (res.error) return reply(`Error:\n${format.code(res.error.stack)}\n${duration}`)
+                    if (res.data !== null) {
+                        if (res.data === '') return reply(`Empty string returned.\n${duration}`)
+                        let msg = `${format.code(res.data)}\nType: ${typeof res.data}, ${duration}`
+                        if (msg.length >= 2000) {
+                            reply(`Data is too long to post, see log.\n${duration}`)
+                            engine.log(res.data)
+                            return;
+                        }
+                        return reply(msg)
+                    }
+                    reply(`No data returned.\n${duration}`)
                 } else {
-                    const res = evaluate(code, ev)
-                    if (res.error) reply(`Error:\n${res.error.stack}\nTook: ${res.duration}ms`)
-                    if (!res.error || res.data) reply(`${res.data}\nTook: ${res.duration}ms`)
+                    const res = evaluate(code, ev, reply)
+                    const duration = `Duration: ${res.duration}ms`
+                    if (res.error) return reply(`Error:\n${res.error.stack}\n${duration}`)
+                    if (res.data) reply(`${res.data}\n${duration}`)
                 }
             })
     })
