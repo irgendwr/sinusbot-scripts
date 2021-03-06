@@ -1,5 +1,8 @@
 # sinusbot scripts
 
+**THIS IS NO LONGER MAINTAINED** and might be archived soon.
+Feel free to fork and work on these scripts on your own (as long as you follow the [MIT license](https://github.com/irgendwr/sinusbot-scripts/blob/master/LICENSE) and mention me).
+
 This repository contains a few scripts that I wrote for the [SinusBot](https://sinusbot.com).
 
 ## Installation
