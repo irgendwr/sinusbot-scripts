@@ -40,7 +40,10 @@ registerPlugin({
 
     class Cleverbot {
         constructor() {
+            // keeps track of the chat log
             this.chat = []
+            // session token thing
+            this.XVIS = null
         }
 
         /**
@@ -68,12 +71,23 @@ registerPlugin({
         }
 
         /**
+         * Resets the current state and creates a new session.
+         * @param {(error?: string) => void} [callback]
+         */
+        reset(callback) {
+            engine.log('reset')
+            this.chat = []
+            this.XVIS = null
+            this.init(callback)
+        }
+
+        /**
          * Ask Cleverbot something.
          * @param {string} input 
          * @param {function} callback 
-         * @param {number} retrys Take it or leave it.
+         * @param {number} retries Take it or leave it.
          */
-        ask(input, callback, retrys=3) {
+        ask(input, callback, retries=3) {
             let url = Cleverbot.api
             let body = `stimulus=${Cleverbot._encode(input)}`
 
@@ -102,12 +116,12 @@ registerPlugin({
                 if (error) {
                     this.chat.pop()
                     engine.log(`HTTP Error: ${error}`)
-                    if (retrys <= 0) {
+                    if (retries <= 0) {
                         if (typeof callback === 'function') callback(error, null)
                         return;
                     } else {
                         engine.log('retry...')
-                        return this.ask(input, callback, --retrys)
+                        return this.ask(input, callback, --retries)
                     }
                 }
                 
@@ -117,6 +131,17 @@ registerPlugin({
                     this.chat.pop()
                     engine.log('Error: Request denied by API')
                     if (typeof callback === 'function') callback('Request denied by API', null)
+                    this.reset()
+                    return;
+                } else if (answer == 'Hello from Cleverbot') {
+                    this.reset(error => {
+                        if (error) {
+                            if (typeof callback === 'function') callback('Invalid response by API', null)
+                            return;
+                        }
+                        engine.log('retry...')
+                        this.ask(input, callback, --retries);
+                    })
                     return;
                 }
                 this.chat.push(answer)
