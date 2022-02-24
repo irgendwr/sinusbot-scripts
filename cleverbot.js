@@ -127,12 +127,17 @@ registerPlugin({
                 
                 let res = response.data.toString().split('\r')
                 let answer = res[0]
-                if (answer == '<HTML><BODY>DENIED</BODY></HTML>') {
+
+                // Catch invalid answers such as:
+                // '<HTML><BODY>DENIED</BODY></HTML>'
+                // '<html>'
+                if (answer.toLowerCase().startsWith('<html>')) {
                     this.chat.pop()
                     engine.log('Error: Request denied by API')
                     if (typeof callback === 'function') callback('Request denied by API', null)
                     this.reset()
                     return;
+                // The default answer is also a bad sign:
                 } else if (answer == 'Hello from Cleverbot') {
                     this.reset(error => {
                         if (error) {
@@ -307,6 +312,15 @@ registerPlugin({
                 reply(response)
                 if (tts) audio.say(response)
             }))
+        })
+        
+        command.createCommand('reset-cleverbot')
+        .alias('cleverbot')
+        .help('Reset cleverbot.')
+        .manual('Reset cleverbot.')
+        .exec((client, args, reply, ev) => {
+            engine.log(`Cleverbot reset by: ${client.name()} (${client.uid()})`)
+            bot.reset();
         })
     })
 
