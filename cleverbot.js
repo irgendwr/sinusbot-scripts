@@ -77,7 +77,7 @@ registerPlugin({
         reset(callback) {
             engine.log('reset')
             this.chat = []
-            this.XVIS = null
+            //this.XVIS = null
             this.init(callback)
         }
 
@@ -85,13 +85,19 @@ registerPlugin({
          * Ask Cleverbot something.
          * @param {string} input 
          * @param {function} callback 
-         * @param {number} retries Take it or leave it.
+         * @param {number} retries How often to retry before giving up.
          */
         ask(input, callback, retries=3) {
+            let len = this.chat.length
+
+            // Check if we have to wait for the bot to write something.
+            if (len % 2 !== 0) {
+                engine.log('Ignoring message since it\'s not our turn to speak. Hint: You can reset via the reset-cleverbot command.')
+                return;
+            }
+
             let url = Cleverbot.api
             let body = `stimulus=${Cleverbot._encode(input)}`
-
-            let len = this.chat.length
             for (let i = 0; i < len && i < 7; i++) {
                 body += `&vText${i + 2}=${Cleverbot._encode(this.chat[len - i - 1])}`
             }
@@ -126,7 +132,7 @@ registerPlugin({
                 }
                 
                 let res = response.data.toString().split('\r')
-                let answer = res[0]
+                let answer = res[0].trim()
 
                 // Catch invalid answers such as:
                 // '<HTML><BODY>DENIED</BODY></HTML>'
@@ -307,7 +313,13 @@ registerPlugin({
             typing(ev.channel.id())
 
             bot.ask(args.message, (err, response) => delay(start, () => {
-                if (err) return reply(errResponse);
+                if (err) {
+                    reply(errResponse)
+                    if (engine.getBackend() === 'discord') {
+                        ev.message.createReaction('❌')
+                    }
+                    return;
+                }
 
                 reply(response)
                 if (tts) audio.say(response)
@@ -320,18 +332,32 @@ registerPlugin({
         .manual('Reset cleverbot.')
         .exec((client, args, reply, ev) => {
             engine.log(`Cleverbot reset by: ${client.name()} (${client.uid()})`)
-            bot.reset();
+            bot.reset()
+            if (engine.getBackend() === 'discord') {
+                ev.message.createReaction('✅')
+            }
         })
     })
 
     event.on('chat', (/** @type {Message} */ev) => {
         if (ev.channel && ev.channel.id().endsWith(channel)) {
-            if (ev.text.startsWith('//') || ev.client.isSelf()) return;
+            // ignore own messages
+            if (ev.client.isSelf()) return;
+
+            let text = ev.text
+            // ignore messages starting with "//"
+            if (text.startsWith('//')) return;
+            // ignore messages starting with "http(s)://"
+            if (text.startsWith('https://') || text.startsWith('http://')) return;
+
             let start = Date.now()
             typing(ev.channel.id())
 
-            bot.ask(ev.text, (err, response) => delay(start, () => {
-                if (err) return ev.channel.chat(errResponse);
+            bot.ask(text, (err, response) => delay(start, () => {
+                if (err) {
+                    ev.channel.chat(errResponse)
+                    return;
+                }
 
                 ev.channel.chat(response)
                 if (tts) audio.say(response)
@@ -340,8 +366,23 @@ registerPlugin({
     })
 
     /**
+     * Adds a reaction to a message.
+     * @param {string} channelID Channel ID
+     * @param {string} messageID Message ID
+     * @param {string} emoji Emoji
+     * @return {Promise<object>}
+     * @author Jonas Bögle
+     * @license MIT
+     */
+    function createReaction(channelID, messageID, emoji) {
+        return discord('PUT', `/channels/${channelID}/messages/${messageID}/reactions/${emoji}/@me`, null, false);
+    }
+
+    /**
      * Post a typing indicator for the specified channel.
      * @param {string} channelID
+     * @author Jonas Bögle
+     * @license MIT
      */
     function typing(channelID) {
         if (engine.getBackend() !== 'discord') return;
@@ -351,6 +392,45 @@ registerPlugin({
                 engine.log(err)
             }
         })
+    }
+
+    /**
+     * Executes a discord API call
+     * @param {string} method http method
+     * @param {string} path path
+     * @param {object} [data] json data
+     * @param {boolean} [repsonse] `true` if you're expecting a json response, `false` otherwise
+     * @return {Promise<object>}
+     * @author Jonas Bögle
+     * @license MIT
+     */
+    function discord(method, path, data=null, repsonse=true) {
+        if (engine.getBackend() !== 'discord') return;
+
+        return new Promise((resolve, reject) => {
+            backend.extended().rawCommand(method, path, data, (err, data) => {
+                if (err) return reject(err);
+                if (repsonse) {
+                    let res;
+                    try {
+                        res = JSON.parse(data);
+                    } catch (err) {
+                        engine.log(`${method} ${path} failed`)
+                        engine.log(`${data}`)
+                        return reject(err);
+                    }
+                    
+                    if (res === undefined) {
+                        engine.log(`${method} ${path} failed`)
+                        engine.log(`${data}`)
+                        return reject('Invalid Response');
+                    }
+
+                    return resolve(res);
+                }
+                resolve();
+            });
+        });
     }
 
     /**
