@@ -51,7 +51,16 @@ registerPlugin({
          * @param {(error?: string) => void} [callback]
          */
         init(callback) {
-            this._send('GET', Cleverbot.base, null, (error, response) => {
+            let date = new Date()
+            let month = date.getMonth()+1
+            let day = date.getDate()
+            let datestr = ''+date.getFullYear()
+            if (month < 10) datestr += '0'
+            datestr += month
+            if (day < 10) datestr += '0'
+            datestr += day
+
+            this._send('GET', Cleverbot.initURL+datestr, null, (error, response) => {
                 if (error) {
                     engine.log(`HTTP Error: ${error}`)
                     if (typeof callback === 'function') callback(`HTTP Error: ${error}`)
@@ -231,7 +240,11 @@ registerPlugin({
          * @return {?string}
          */
         static _getCookie(name, headers) {
-            for (let cookie of headers['Set-Cookie']) {
+            let cookies = headers['Set-Cookie']
+
+            if (!cookies || cookies.length === 0) return null;
+
+            for (let cookie of cookies) {
                 cookie = cookie.split('=')
 
                 if (cookie[0] == name) {
@@ -284,6 +297,7 @@ registerPlugin({
         // }
     }
     Cleverbot.base = 'https://www.cleverbot.com/'
+    Cleverbot.initURL = 'https://www.cleverbot.com/extras/conversation-social-min.js?'
     Cleverbot.api = Cleverbot.base+'webservicemin?uc=UseOfficialCleverbotAPI&'
     Cleverbot.defaultTimeout = 10 * 1000
     Cleverbot.chatLen = 10
